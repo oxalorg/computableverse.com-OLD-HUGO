@@ -11,6 +11,9 @@ deploy2:
 		git pull && \
 		./hugo"
 
+local:
+	./hugo || echo "Failed"
+
 nginx:
 	ssh -t ark "cd /var/www/computableverse.com/conf && \
 		sudo cp computableverse.com.conf /etc/nginx/sites-available/computableverse.com.conf && \

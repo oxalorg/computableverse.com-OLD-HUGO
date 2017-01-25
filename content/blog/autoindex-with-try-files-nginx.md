@@ -1,11 +1,15 @@
 ---
 title: "Autoindex with try_files in nginx"
-dart: 2017-01-26
+date: 2017-01-26
 tags:
     - nginx
+slug: nginx-autoindex-try-files
 ---
 
-Let me explain the proper way to implement nginx with both `try_files`
+It's a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let's change that and understand
+the proper way to implement nginx with both `try_files`
 directive and automatic directory index using `autoindex on`
 with a working 404 page on incorrect urls.
 

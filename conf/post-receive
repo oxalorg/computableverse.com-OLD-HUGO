@@ -1,0 +1,7 @@
+#!/bin/bash
+
+HUGO_SITE=/var/www/computableverse.com
+
+cd $HUGO_SITE
+git pull && make local || echo "Failed sucka"
+

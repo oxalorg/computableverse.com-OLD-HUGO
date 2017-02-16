@@ -1,0 +1,21 @@
+body {
+    padding: 5px;
+    font-family: 'Merriweather', serif;
+}
+
+.site-title {
+    margin-bottom: 0px;
+}
+
+.site-header .meta {
+    margin-top: -10px;
+}
+
+.meta {
+    color: #3d3d3d;
+}
+
+.post .post-title {
+    margin-bottom: 0px;
+}
+

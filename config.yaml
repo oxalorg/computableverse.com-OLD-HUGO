@@ -2,8 +2,9 @@ baseURL: http://computableverse.com/
 metaDataFormat: yaml
 languageCode: en-us
 title: Computable(verse)
-theme: computable
-
+theme: sakura
+PygmentsCodeFences: true
+pygmentsstyle: "friendly"
 
 permalinks:
     page: /:slug/

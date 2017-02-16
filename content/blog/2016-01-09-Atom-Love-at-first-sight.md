@@ -1,5 +1,6 @@
 ---
 date: 2016-01-09T00:00:00Z
+best: true
 title: 'Atom: Love at first sight'
 slug: Atom-Love-at-first-sight
 

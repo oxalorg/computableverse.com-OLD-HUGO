@@ -8,8 +8,14 @@ body {
     margin-bottom: 0px;
 }
 
+.site-title a:hover {
+    text-decoration: none;
+    border: 0px;
+    font-style: italic;
+}
+
 .site-header .meta {
-    margin-top: -10px;
+    margin-top: 0px;
 }
 
 .site-main {
@@ -25,3 +31,6 @@ body {
     margin-bottom: 0px;
 }
 
+.post .meta {
+    margin-top: 0px;
+}

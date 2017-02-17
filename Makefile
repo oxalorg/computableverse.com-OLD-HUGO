@@ -24,3 +24,5 @@ one_time_setup:
 		sudo cp computableverse.com.conf /etc/nginx/sites-available/computableverse.com.conf && \
 		sudo ln -s /etc/nginx/sites-available/computableverse.com.conf /etc/nginx/sites-enabled/ "
 
+sakura:
+	cp /cabinet/lab/sakura.css/css/sakura.css themes/sakura/static/css/sakura.css

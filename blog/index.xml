@@ -1,0 +1,1150 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blogs on Computable(verse)</title>
+    <link>http://computableverse.com/blog/index.xml</link>
+    <description>Recent content in Blogs on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 16 Mar 2017 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://computableverse.com/blog/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pytest: Sharing fixtures across tests using class level scopes</title>
+      <link>http://computableverse.com/blog/pytest-sharing-class-fixtures/</link>
+      <pubDate>Thu, 16 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/pytest-sharing-class-fixtures/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve been using pytest for writing tests because I absolutely
+love the simple assert systems. Although I&amp;rsquo;d love to write a
+small article detailing an easy introduction to pytest, I&amp;rsquo;d be
+digressing from the original title.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+
+&lt;p&gt;What exactly is the problem I&amp;rsquo;ll be describing: using pytest
+to share the same instance of setup and teardown code among
+multiple tests.&lt;/p&gt;
+
+&lt;p&gt;So instead of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; teardown
+setup --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We want:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;why&#34;&gt;Why?&lt;/h2&gt;
+
+&lt;p&gt;While testing, there is a need to create an environment for
+the test like a database, or an empty directory.&lt;/p&gt;
+
+&lt;p&gt;Example:&lt;/p&gt;
+# I&#39;m taking an example of a flask test application
+# In pytest we do this using advanced fixtures
+@pytest.fixtures(scope=&#39;function&#39;)
+def client():
+    # create a database
+    # at the start of the test
+    db.create_all()
+
+    app_client = app.test_client()
+    app_client.db = db
+    yield app_client
+
+    # remove the database
+    # at the end of the test
+    db.drop_all()
+
+&lt;p&gt;Most of the times we can make-do with a completely fresh
+environment for every test function we write, but at some
+point you&amp;rsquo;ll come across for a need to group multiple tests
+with the same instance of an environment.&lt;/p&gt;
+
+&lt;p&gt;Example, let&amp;rsquo;s say we want the user to register, login, and
+check his details all within the same database instance:&lt;/p&gt;
+def test_user_register(client):
+    ...
+
+def test_user_login(client):
+    ...
+
+def test_user_details(client):
+    ...
+
+&lt;p&gt;Pytest provides &amp;ldquo;scopes&amp;rdquo; for such groupings. Here pytest will
+run the &lt;code&gt;client&lt;/code&gt; fixture for every function separately, since
+it&amp;rsquo;s scoped as a function. That means our database will lose
+the changes made by the register function when it runs the
+login function. To avoid losing these changes, we effectively
+want to &lt;em&gt;share&lt;/em&gt; the same fixture instance across these tests.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-solution&#34;&gt;The Solution&lt;/h2&gt;
+
+&lt;p&gt;There is an easy way to solve this, we can just extract all
+three tests into it&amp;rsquo;s own module and create a &lt;em&gt;module&lt;/em&gt; scoped
+fixture using &lt;code&gt;@pytest.fixtures(scope=&#39;module&#39;)&lt;/code&gt;, everything
+should work as expected. But what if we need to do this across
+several tests which belong to the several user stories?&lt;/p&gt;
+
+&lt;p&gt;Pytest documentation mostly highlights three scope levels
+namely: &lt;em&gt;function, module, and session&lt;/em&gt; scopes, but there is
+another scope available, which is the &lt;em&gt;class&lt;/em&gt; scope.&lt;/p&gt;
+
+&lt;p&gt;In a class level scope, we directly inject our environment into
+the class as instance variables, which are then shared among
+all the methods of the class.&lt;/p&gt;
+
+&lt;p&gt;First we create a class scoped fixture:&lt;/p&gt;
+@pytest.fixture(scope=&#39;class&#39;)
+def class_client(request):
+    # setup code
+    db = ...
+    db.create_all()
+
+    # inject class variables
+    request.cls.db = db
+    yield
+
+    # teardown code
+    db.drop_all()
+
+&lt;p&gt;Here, as you can see we&amp;rsquo;re adding the database object, which
+needs to be shared among all the class methods, into the class
+of the current function which is run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;request.cls.db = db
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is done using the &lt;code&gt;request&lt;/code&gt; parameter provided by pytest to
+give the request of the current test function.&lt;/p&gt;
+
+&lt;p&gt;To use this fixture on a class, we simply deocarate the class
+as follows:&lt;/p&gt;
+@pytest.mark.usefixtures(&#39;class_client&#39;)
+class TestUserStory:
+    def test_user_register(self):
+        self.db.add(...)
+
+    def test_user_login(self):
+        # changes made in register are persisted
+        # in the database object
+        self.db.query(...)
+
+    def test_user_details(self):
+        ...
+
+&lt;p&gt;Now every function in the class can automatically access
+the injected variables from the fixture as &lt;code&gt;self.variable&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s about it. I hope the explanation was clear and concise,
+any sort of feedback is appreciated! Thanks.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Fix Django Invalid HTTP_HOST header emails</title>
+      <link>http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/</link>
+      <pubDate>Sun, 26 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful &lt;strong&gt;Error Reporting&lt;/strong&gt;
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.&lt;/p&gt;
+
+&lt;p&gt;But soon, I started getting a TON of &lt;code&gt;Invalid HTTP_HOST header&lt;/code&gt;. I tried to
+take a look into what exactly what happening.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://computableverse.com/assets/images/django-errors.png&#34; alt=&#34;tons of invalid host errors&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Firstly, I have a couple sites hosted on my server. Some of them are served via
+&lt;code&gt;https&lt;/code&gt; and some aren&amp;rsquo;t. When I took a closer look into the error reports, I
+could see that none of them had a &lt;em&gt;request url&lt;/em&gt; of earthlyhumans.com (my django
+app). They had the request of one of my other websites, but it somehow wasn&amp;rsquo;t
+being caught by their nginx configs.&lt;/p&gt;
+
+&lt;p&gt;So I took a look into how nginx choses a configuration for a particular
+request. First, it will check if a particular config has a valid &lt;code&gt;listen&lt;/code&gt;
+directive for the incoming request. If it does, then it moves onto checking the
+&lt;code&gt;server_name&lt;/code&gt; directive. If neither happens, it redirects to the &lt;code&gt;default&lt;/code&gt;
+block.&lt;/p&gt;
+
+&lt;p&gt;I already had a default block configured as follows..&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80;
+    return 444;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;..and yet urls were getting passed onto my Django application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/etc/nginx/sites-available$ tree
+.
+|-- default
+|-- earthlyhumans.com.conf
+|-- example.com.conf
+`-- example2.com.conf
+
+0 directories, 4 files
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is how my configuration looked. Now the problem was that why weren&amp;rsquo;t the
+requests getting redirected to one of my other applications.&lt;/p&gt;
+
+&lt;p&gt;Turns out, the &amp;ldquo;default&amp;rdquo; server in nginx is the first server block it reads i.e
+sorted alphabetically, unless you have the &lt;code&gt;default_server&lt;/code&gt; option listed in
+the &lt;code&gt;listen&lt;/code&gt; directive.&lt;/p&gt;
+
+&lt;p&gt;But wait a minute, &lt;code&gt;default&lt;/code&gt; block is still the first listed server block. But
+silly me, I hadn&amp;rsquo;t added a listen block for port 443. So it went ahead and
+found the first block with port 443 and matched it with my django server block.&lt;/p&gt;
+
+&lt;p&gt;So I simply changed my default config to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80 default_server;
+    return 444;
+}
+
+server {
+    listen 443 default_server;
+    server_name _; # This can be omitted.
+    return 444;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;special nginx’s non-standard code 444 is returned that closes the connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That seemed to have fixed all my issues. You can also explicitly rename &lt;code&gt;default&lt;/code&gt;
+file to something like &lt;code&gt;0000-default&lt;/code&gt; which makes sure that it&amp;rsquo;s the first
+config to be loaded.&lt;/p&gt;
+
+&lt;p&gt;References:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://nginx.org/en/docs/http/request_processing.html&#34;&gt;nginx request processing&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://nginx.org/en/docs/beginners_guide.html&#34;&gt;nginx beginners guide&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- date: 2016-08-25 --&gt;</description>
+    </item>
+    
+    <item>
+      <title>Autoindex with try_files in nginx</title>
+      <link>http://computableverse.com/blog/nginx-autoindex-try-files/</link>
+      <pubDate>Thu, 26 Jan 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/nginx-autoindex-try-files/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let&amp;rsquo;s change that and understand
+the proper way to implement nginx with both &lt;code&gt;try_files&lt;/code&gt;
+directive and automatic directory index using &lt;code&gt;autoindex on&lt;/code&gt;
+with a working 404 page on incorrect urls.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s say we have a particular location block in which we want
+these features to co-exist. What we need is something like this:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Match uri exactly&lt;/li&gt;
+&lt;li&gt;Show &lt;code&gt;index.html&lt;/code&gt; if it is present&lt;/li&gt;
+&lt;li&gt;Show &lt;code&gt;{uri}.html&lt;/code&gt; if it is present&lt;/li&gt;
+&lt;li&gt;Show an automated directory if folder exists&lt;/li&gt;
+&lt;li&gt;Otherwise show a 404 error&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;2nd point is implemented using an inbuilt nginx directive:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;index index.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Rest of the scenarios are implemented using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;try_files $uri $uri.html $uri/ =404;
+autoindex on;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These are checked in order until one of the condition satisfies.&lt;/p&gt;
+
+&lt;p&gt;Entire config:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80;
+    server_name rogue.oxal.org;
+    server_tokens off;
+    root /var/www/rogue.oxal.org/public;
+    index index.html;
+
+    location / {
+        autoindex on;
+        try_files $uri $uri.html $uri/ =404;
+    }
+
+    error_page 404 /404.html;
+}
+&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+    
+    <item>
+      <title>Convert any folder into a website using Pandoc and a Makefile</title>
+      <link>http://computableverse.com/blog/create-website-using-pandoc-make-file/</link>
+      <pubDate>Fri, 28 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/create-website-using-pandoc-make-file/</guid>
+      <description>&lt;p&gt;It was a long day. I was lurking HackerNews and /r/programming.
+Things were going slow. I had been taking quite a lot of notes
+inside a plain ol&amp;rsquo; directory. I know, 2016 right?! But every
+single note taking application had failed me.&lt;/p&gt;
+
+&lt;p&gt;Although I had no use of viewing my &lt;em&gt;markdown&lt;/em&gt; notes in the
+browser, I decided to do it anyways. For the sake of completeness.&lt;/p&gt;
+
+&lt;p&gt;I immediately thought of &lt;a href=&#34;https://github.com/oxalorg/dystic&#34;&gt;dystic&lt;/a&gt;,
+my personal static site generator, but dissed it as too heavy.
+I decided then, that I wanted something I could hack together in
+the next 10 minutes.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;I immediately thought of &lt;a href=&#34;https://pandoc.org&#34;&gt;pandoc&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pandoc --toc --from markdown --to html my-note.md -o my-note.html
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Done. Easy, wasn&amp;rsquo;t it?&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s do this for the entire directory, &lt;em&gt;recursively&lt;/em&gt;. We could
+write a simple shell script, but that would run everytime on everyfile.
+We don&amp;rsquo;t want that. We want to regenerate the &lt;em&gt;html&lt;/em&gt; only if the
+&lt;em&gt;markdown&lt;/em&gt; counterpart has been updated since the previous build.&lt;/p&gt;
+
+&lt;p&gt;What &lt;del&gt;better&lt;/del&gt; faster way than to use GNU Make for &lt;code&gt;mtime&lt;/code&gt; based
+builds.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cd /notes
+nvim Makefile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;/notes/Makefile&lt;/strong&gt;:&lt;/p&gt;
+# Find all markdown files
+MARKDOWN=$(shell find . -iname &#34;*.md&#34;)
+# Form all &#39;html&#39; counterparts
+HTML=$(MARKDOWN:.md=.html)
+
+.PHONY = all tar clean
+all: $(HTML)
+
+%.html: %.md
+    pandoc --from markdown --to html $&lt; -o $@
+
+tar: $(MARKDOWN)
+    tar --exclude=notes.tar.gz --exclude=.git/ -czvf notes.tar.gz ./
+
+clean:
+    rm $(HTML)
+
+&lt;p&gt;We&amp;rsquo;re almost done. Now just run &lt;code&gt;make all&lt;/code&gt; in &lt;code&gt;/notes&lt;/code&gt; and all your
+&lt;em&gt;markdown&lt;/em&gt; files will be built into &lt;em&gt;html&lt;/em&gt; files.&lt;/p&gt;
+
+&lt;p&gt;Run &lt;code&gt;make clean&lt;/code&gt; to remove all the html files and run &lt;code&gt;make tar&lt;/code&gt; to
+backup all your notes.&lt;/p&gt;
+
+&lt;p&gt;Simply open your browser and type &amp;ldquo;/notes&amp;rdquo; (or your complete
+path) into the address bar and voila! It&amp;rsquo;s not pretty but it
+works. (PS: use &lt;code&gt;file:///path/to/folder&lt;/code&gt; if not using chrome)&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;To make your files more pretty use my minimal css theme
+&lt;a href=&#34;https://github.com/oxalorg/sakura&#34;&gt;sakura&lt;/a&gt; and then change the pandoc
+command as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cd /notes
+wget &amp;quot;https://raw.githubusercontent.com/oxalorg/sakura/master/sakura.css&amp;quot;
+pandoc --css /notes/sakura.css --from markdown --to html $&amp;lt; -o $@
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now you can remote sync the entire website easily using rsync:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;rsync --exclude &#39;*.md&#39; source/ destination/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s the basics. This can easily be used to create your own
+blog, websites, small projects, pretty much anything. The
+best part being that it needs no &amp;lsquo;rules&amp;rsquo; from your end,
+you&amp;rsquo;re free to structure your content anyway you like; something
+which is missing from almost every static site generator out
+there. This is one of my quibbles which I&amp;rsquo;m trying to fix with
+&lt;a href=&#34;https://github.com/oxalorg/dystic&#34;&gt;dystic&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I added a couple more feature including making automatic
+indexes, sorting using title/date, metadata parsing etc. But I
+quickly realised that it&amp;rsquo;s a lot of pain to be doing it using
+&lt;em&gt;only&lt;/em&gt; GNU Make. So I&amp;rsquo;ve decided to start working on &lt;code&gt;dystic&lt;/code&gt;
+again. Maybe even re-write it in &lt;code&gt;nim&lt;/code&gt; or &lt;code&gt;golang&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let me know your comments below.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Guide to installing stagit on macOS / OSX</title>
+      <link>http://computableverse.com/blog/guide-installing-stagit-macos-osx/</link>
+      <pubDate>Sat, 01 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/guide-installing-stagit-macos-osx/</guid>
+      <description>&lt;p&gt;Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&amp;rsquo;s easy to use, looks decent, and best of all it&amp;rsquo;s static. So here&amp;rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;First we need to install &lt;code&gt;libgit2&lt;/code&gt; dependency of &lt;code&gt;stagit&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;brew install libgit2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will install &lt;code&gt;libgit2&lt;/code&gt; in the location: &lt;code&gt;/usr/local/Cellar/libgit2/0.24.1/&lt;/code&gt; (the 0.24.1  version may vary, regardless home-brew will output the location where the library was installed, so take a note of it).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Clone the stagit repository, since we will be building it on our own.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone git://git.2f30.org/stagit.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now before moving on, you can either choose to build from the latest master commit, or checkout a version before building. If you want to build a version, find all the versions using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git tags -l
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# git checkout tags/&amp;lt;version&amp;gt; 
+# e.g.:
+git checkout tags/0.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Now edit the &lt;code&gt;config.mk&lt;/code&gt; file in the directory as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# add /share/ after PREFIX
+MANPREFIX = ${PREFIX}/share/man
+
+...
+
+# set the library path as determined in step 1
+GITINC = /usr/local/Cellar/libgit2/0.24.1/include/
+GITLIB = /usr/local/Cellar/libgit2/0.24.1/lib/
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Go back to command line and run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;make
+make install
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;If all went well, you can now &lt;code&gt;man stagit&lt;/code&gt; and start using it.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Guide to easy publishing and distributing your python application</title>
+      <link>http://computableverse.com/blog/guide-publish-distribute-python-app/</link>
+      <pubDate>Sat, 30 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/guide-publish-distribute-python-app/</guid>
+      <description>&lt;p&gt;Let me be real for a second. It&amp;rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&amp;rsquo;s a breeze. Here&amp;rsquo;s a clean, small, and quick guide explaining just that. No bullshit.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;First &lt;code&gt;cd&lt;/code&gt; into your project folder, preferably with &lt;code&gt;vitrualenv&lt;/code&gt; active. Then create a &lt;code&gt;setup.py&lt;/code&gt; file in the directory similar to this:&lt;/p&gt;
+from setuptools import setup
+from proj import _VERSION
+setup(
+    name=&#39;&lt;proj&gt;&#39;,
+    packages=[&#39;&lt;proj&gt;&#39;],
+    version=_VERSION, 
+    description=&#39;&lt;proj&gt;&#39;,
+    long_description=&#39;Please visit https://github.com/MiteshNinja/&lt;proj&gt; for more details.&#39;,
+    author=&#39;Mitesh Shah&#39;,
+    author_email=&#39;mitesh@miteshshah.com&#39;,
+    url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;&#39;,
+    download_url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;/tarball/&#39; +
+    _VERSION,
+    keywords=[&#39;python&#39;, &#39;proj&#39;],
+    classifiers=[],
+    install_requires=[
+        &#39;package1&#39;, &#39;package2&#39;, &#39;package3&#39;
+    ],
+    entry_points={
+        &#39;console_scripts&#39;: [
+            &#39;proj=proj:main&#39;,
+        ],
+    })
+
+&lt;p&gt;Now install the binary using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;python3 setup.py bdist_wheel
+pip3 install dist/dystic...[TAB to autocomplete]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application will get installed and a &lt;code&gt;dist&lt;/code&gt; and &lt;code&gt;build&lt;/code&gt; directory will be also be created.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;virtualenv&lt;/code&gt; active, make sure the application got installed by either running the command line binary, or running a python interpreter and checking as follows:&lt;/p&gt;
+&gt;&gt;&gt; import dystic
+&gt;&gt;&gt; dystic
+&lt;module &#39;dystic&#39; from &#39;/home/ox/Dropbox/Projects/dystic/venv/lib/python3.5/site-packages/dystic/__init__.py&#39;&gt;
+
+&lt;p&gt;Now inside your &lt;code&gt;proj/__init__.py&lt;/code&gt; file, include a variable as follows:&lt;/p&gt;
+_VERSION = 0.1.0
+
+&lt;p&gt;You only need to change this version and commit whenever making a version change, ofcourse also rebuilding the wheels.&lt;/p&gt;
+
+&lt;p&gt;To distribute the application on &lt;code&gt;pypi&lt;/code&gt;, go to &lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;https://pypi.python.org/pypi&lt;/a&gt; and create an account and create a file &lt;code&gt;~/.pypirc&lt;/code&gt; as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[distutils]
+index-servers=
+    pypi
+    pypitest
+
+[pypitest]
+repository = https://testpypi.python.org/pypi
+username = MiteshNinja
+password = password
+
+[pypi]
+repository = https://pypi.python.org/pypi
+username = MiteshNinja
+password = password
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Note: you can also create an account on pypitest server to test your app beforehand.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Now for uploading you need &lt;code&gt;twine&lt;/code&gt;. Install as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pip3 install twine
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To upload to pypi, simply run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;twine upload dist/&amp;lt;proj&amp;gt;-&amp;lt;version&amp;gt;-py3-none-any.whl
+# or any .whl file created in dist folder
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Voila. That&amp;rsquo;s about it. You can now &lt;code&gt;pip3 install &amp;lt;proj&amp;gt;&lt;/code&gt; from anywhere :)&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Secure flask-admin using flask-basicauth</title>
+      <link>http://computableverse.com/blog/flask-admin-using-basicauth/</link>
+      <pubDate>Thu, 14 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/flask-admin-using-basicauth/</guid>
+      <description>&lt;p&gt;I could not find a way to protect my flask-admin installation at &lt;code&gt;/admin&lt;/code&gt; using &lt;code&gt;Flask-BasicAuth&lt;/code&gt;, so I decided to write this for future explorers!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;The flask-admin docs praise the simplicity and awesomeness of using HTTP basic authentication, and also point the user towards a small extenstion which makes this easy process even easier.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The simplest form of authentication is HTTP Basic Auth. It doesn’t interfere with your database models, and it doesn’t require you to write any new view logic or template code.
+Have a look at Flask-BasicAuth to see just how easy it is to put your whole application behind HTTP Basic Auth.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;and then they drop the bomb saying:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Unfortunately, there is no easy way of applying HTTP Basic Auth just to your admin interface.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Oh well. I definitely do not want people to log in when they land on my index page, so that rules the above option out.&lt;/p&gt;
+
+&lt;p&gt;Thankfully, it&amp;rsquo;s rather quite easy to extend admin views to support &lt;code&gt;flask-BasicAuth&lt;/code&gt;. We just need to override two functions in our admin &lt;code&gt;ModelView&lt;/code&gt; class.&lt;/p&gt;
+class ModelView(sqla.ModelView):
+    def is_accessible(self):
+        if not basic_auth.authenticate():
+            raise AuthException(&#39;Not authenticated.&#39;)
+        else:
+            return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(basic_auth.challenge())
+
+&lt;p&gt;Here &lt;code&gt;basic_auth&lt;/code&gt; is defined as &lt;code&gt;basic_auth = BasicAuth(app)&lt;/code&gt; directly borrowed from the quickstart section of BasicAuth docs.&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;BasicAuth&lt;/code&gt; can&amp;rsquo;t authenticate the user, it will raise an exception which inturn will call the &lt;code&gt;inaccessible_callback&lt;/code&gt; which will challenge the user to provide authentication details.&lt;/p&gt;
+
+&lt;p&gt;The exception, &lt;code&gt;AuthException&lt;/code&gt;, is nothing but a simple &lt;code&gt;HTTPException&lt;/code&gt; provided by &lt;code&gt;werkzeug&lt;/code&gt;:&lt;/p&gt;
+from werkzeug.exceptions import HTTPException
+
+class AuthException(HTTPException):
+    def __init__(self, message):
+        super().__init__(message, Response(
+            &#34;You could not be authenticated. Please refresh the page.&#34;, 401,
+            {&#39;WWW-Authenticate&#39;: &#39;Basic realm=&#34;Login Required&#34;&#39;}
+        ))
+
+&lt;p&gt;Now we can call our admin views normally like this:&lt;/p&gt;
+admin = Admin(app, name=&#39;ninjas-nest&#39;)
+admin.add_view(ModelView(Post, db.session))
+admin.add_view(ModelView(PostFiles, db.session))
+
+&lt;p&gt;TADA! All the urls prefixed with &lt;code&gt;/admin&lt;/code&gt; now require authentication before you can proceed.&lt;/p&gt;
+
+&lt;p&gt;WARNING: Please note that this is not secure on it&amp;rsquo;s own. It will send username and password without any encryption. Only use it with HTTPS (SSL/TLS). Also, this does not block ips which have a lot of failed attempts which could lead to security concerns. I will deal with this in a later post.&lt;/p&gt;
+
+&lt;p&gt;Let me know if you have any better way of protecting only &lt;code&gt;flask-admin&lt;/code&gt; in the comments below.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Implement HTTPS using SSL/TLS for FREE within 5 minutes</title>
+      <link>http://computableverse.com/blog/implement-https-using-ssl-tls-free-fast/</link>
+      <pubDate>Sun, 12 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/implement-https-using-ssl-tls-free-fast/</guid>
+      <description>&lt;p&gt;I reckon I&amp;rsquo;ll need to set up TLS for several sites in the future. Applying the DRY principle, I&amp;rsquo;m documenting the steps while it&amp;rsquo;s fresh in my head, so that I don&amp;rsquo;t have to waste time 10 months down the line.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s keep this short and useful.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;install-letsencrypt&#34;&gt;Install letsencrypt&lt;/h3&gt;
+
+&lt;p&gt;No wizardry here. Simple as sh. Refer this &lt;a href=&#34;https://www.nginx.com/blog/free-certificates-lets-encrypt-and-nginx/&#34;&gt;guide&lt;/a&gt; for more details.&lt;/p&gt;
+sudo git clone https://github.com/letsencrypt/letsencrypt /opt/letsencrypt
+cd /opt/letsencrypt
+sudo ./letsencrypt-auto
+cd /var/www
+mkdir letsencrypt
+sudo chgrp www-data letsencrypt
+
+&lt;h3 id=&#34;set-up-letsencrypt-config-file-and-fetch-certificates&#34;&gt;Set up letsencrypt config file and fetch certificates&lt;/h3&gt;
+
+&lt;p&gt;More info &lt;a href=&#34;https://gist.github.com/xrstf/581981008b6be0d2224f&#34;&gt;here&lt;/a&gt;, but siriusly no need to get too involved. Just run the below script as follows &lt;code&gt;sh setupLEConfig.sh &amp;lt;your-domain-name-here&amp;gt; &amp;lt;your-email-here&amp;gt;&lt;/code&gt;:&lt;/p&gt;
+#!/bin/bash
+
+cat &lt;&lt;EOF &gt; /etc/letsencrypt/configs/$1.conf
+domains = $1
+rsa-key-size = 4096
+
+# the current closed beta (as of 2015-Nov-07) is using this server
+server = https://acme-v01.api.letsencrypt.org/directory
+
+# this address will receive renewal reminders
+email = $2
+
+# turn off the ncurses UI, we want this to be run as a cronjob
+text = True
+
+# authenticate by placing a file in the webroot (under .well-known/acme-challenge/)
+# and then letting LE fetch it
+authenticator = webroot
+webroot-path = /var/www/letsencrypt/
+EOF
+
+&lt;h3 id=&#34;fetch-certifcates-and-verify&#34;&gt;Fetch certifcates and verify&lt;/h3&gt;
+
+&lt;p&gt;Point CA (certificate authority) where to find temporary files used for authenticating that you own the domain.&lt;/p&gt;
+server {
+    listen 80;
+    server_name mitesh.ninja;
+
+    # This block is important
+    location /.well-known/acme-challenge {
+        root /var/www/letsencrypt;
+    }
+}
+
+&lt;p&gt;Now restart nginx&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo nginx -t &amp;amp;&amp;amp; sudo nginx -s reload
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and actually fetch the certs:&lt;/p&gt;
+cd /opt/letsencrypt
+./letsencrypt-auto --config /etc/letsencrypt/configs/mitesh.ninja.conf certonly
+
+&lt;h3 id=&#34;final-nginx-config-for-https&#34;&gt;Final nginx config for https&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Listen on port 443 (for ssl).&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Tell nginx where to find your certificates.&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Tell CA (certificate authority) where to find temporary files used for authenticating that you own the domain.&lt;br /&gt;
+
+&lt;ul&gt;
+&lt;li&gt;We did this in http server block for first time authentication.&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;https server block for authentication henceforth.&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Rewrite http traffic to https.&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+server {
+    ###
+    # Replace &#39;mitesh.ninja&#39; with your own FQDN.
+    ##
+    listen 443 ssl; # Step 1
+    server_name mitesh.ninja;
+
+    # Step 2
+    ssl_certificate /etc/letsencrypt/live/mitesh.ninja/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mitesh.ninja/privkey.pem;
+
+    # Step 3
+    location /.well-known/acme-challenge {
+        root /var/www/letsencrypt;
+    }
+}
+server {
+    listen 80;
+    server_name mitesh.ninja www.mitesh.ninja;
+    return 301 https://$host$request_uri;
+}
+
+&lt;p&gt;Now restart nginx&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo nginx -t &amp;amp;&amp;amp; sudo nginx -s reload
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;VOILA!&lt;/strong&gt; That&amp;rsquo;s it. https live at &lt;a href=&#34;https://mitesh.ninja&#34;&gt;https://mitesh.ninja&lt;/a&gt;. View full nginx conf &lt;a href=&#34;https://github.com/MiteshNinja/mitesh.ninja/blob/master/conf/mitesh.ninja.conf&#34;&gt;here&lt;/a&gt; :D)&lt;/p&gt;
+
+&lt;p&gt;Note: The certificates will expire every 3 months. I haven&amp;rsquo;t set up a cron job atm. I&amp;rsquo;m researching more about it, trying new stuff and will most likely roll up a small python script to handle auto renewing.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>How I set up my fresh Ubuntu 16.04 install.</title>
+      <link>http://computableverse.com/blog/ubuntu-16.04-setting-up/</link>
+      <pubDate>Sat, 04 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/ubuntu-16.04-setting-up/</guid>
+      <description>&lt;p&gt;Even though I don&amp;rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &amp;lsquo;just works&amp;rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the &lt;em&gt;Arch Way&lt;/em&gt;. Till then, let me fill my pockets with Ubuntu releases.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Whats the most important thing on a fresh OS install? Definitely the looks, I would say. I started with installing the &lt;code&gt;unity-tweak-tool&lt;/code&gt;, a system-wide GTK3+ theme &lt;code&gt;Arc-Dark&lt;/code&gt;&lt;sup&gt;&lt;a href=&#34;https://github.com/horst3180/arc-theme&#34;&gt;link&lt;/a&gt;&lt;/sup&gt;, and an icon pack &lt;code&gt;paper-icon-theme&lt;/code&gt;&lt;sup&gt;&lt;a href=&#34;https://snwh.org/paper/icons&#34;&gt;link&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+sudo apt install -y unity-tweak-tool
+
+# Arc theme
+wget http://download.opensuse.org/repositories/home:Horst3180/xUbuntu_15.10/Release.key
+sudo apt-key add - &lt; Release.key
+sudo sh -c &#34;echo &#39;deb http://download.opensuse.org/repositories/home:/Horst3180/xUbuntu_15.10/ /&#39; &gt;&gt; /etc/apt/sources.list.d/arc-theme.list&#34;
+sudo apt update
+sudo apt -y install arc-theme
+
+# Paper icons
+sudo add-apt-repository ppa:snwh/pulp
+sudo apt update
+sudo apt install -y paper-icon-theme # paper-gtk-theme
+
+&lt;p&gt;Amazingly, the &lt;code&gt;Arc-Dark&lt;/code&gt; theme has a complimentary &lt;a href=&#34;https://github.com/horst3180/arc-firefox-theme&#34;&gt;Arc-Firefox theme&lt;/a&gt; to go with it. It has some inconsistencies, which I fixed using simple stylesheets.&lt;/p&gt;
+/* https://wiki.archlinux.org/index.php/Firefox#Unreadable_input_fields_with_dark_GTK.2B_themes
+ * Add the below css to
+ * ~/.mozilla/firefox/xxxxxxxx.default/chrome/userContent.css
+*/
+input:not(.urlbar-input):not(.textbox-input):not(.form-control):not([type=&#39;checkbox&#39;]) {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+#downloads-indicator-counter {
+    color: white;
+}
+
+textarea {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+select {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+&lt;p&gt;Now that my desktop looked pretty. It was time for some functionality.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Synaptic&lt;/strong&gt; : Although using &lt;code&gt;apt&lt;/code&gt; is really easy. It&amp;rsquo;s always good to have a a graphical package manager for times when you&amp;rsquo;re lazy ;P&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;gdebi&lt;/strong&gt; : Installing .deb files with command line is pure torture (wait until you have unmet dependecies and watch the hell burn down). Instead, just install gdebi and let the demon die.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;nautilus-dropbox&lt;/strong&gt; : I use dropbox a lot. I don&amp;rsquo;t like being dependent on software, but hell I&amp;rsquo;m dependent on dropbox. I mostly use it to work on projects across different devices. And &lt;em&gt;everything&lt;/em&gt; else too. I literally don&amp;rsquo;t use my hard disk at all, apart for local dropbox storage ofcourse. This bugs me a lot to be honest, I might think of encrypting everything before uploading on dropbox. Will have to read their TOS first.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;keepassx&lt;/strong&gt; : I feel that I could talk a lot more about a password manager than the scanty space available in this puny unordered list.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I also installed the following:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;atom&lt;/strong&gt;: a text editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Chrome&lt;/strong&gt;: Incase firefox fails me.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GitKraken&lt;/strong&gt;: graphic git&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;HexChat&lt;/strong&gt;: IRC - &lt;code&gt;MiteshNinja&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;kdenlive&lt;/strong&gt;: video editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;NeoVim&lt;/strong&gt;: yet another text editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;simplescreenrecorder&lt;/strong&gt;: simple screen recorder.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Steam&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;umake&lt;/strong&gt;: ubuntu-make to install PyCharm and CLion.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;VLC&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;zsh&lt;/strong&gt;: get this. now.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some of the above programs were installed using these commands:&lt;/p&gt;
+sudo apt install -y synaptic gdebi nautilus-dropbox keepassx kdenlive google-chrome zsh
+
+# Screen recorder
+sudo add-apt-repository ppa:maarten-baert/simplescreenrecorder
+sudo apt update
+sudo apt install -y simplescreenrecorder
+
+&lt;p&gt;The only thing I lack is a decent email notification system. I am currently using a simple python + cron script to get the job done, but I&amp;rsquo;ll soon be writing an appindicator/status bar application to get that to check my emails for me.&lt;/p&gt;
+
+&lt;p&gt;I also set up my terminal, which I&amp;rsquo;ve described in this &lt;a href=&#34;http://computableverse.com/blog/my-terminal-setup&#34;&gt;post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;What do &lt;em&gt;you&lt;/em&gt; do on a fresh OS install?&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>NeoVim quick starter guide with python autocomplete.</title>
+      <link>http://computableverse.com/blog/neovim-guide-python/</link>
+      <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/neovim-guide-python/</guid>
+      <description>&lt;p&gt;So there&amp;rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Install neovim (guide &lt;a href=&#34;https://github.com/neovim/neovim/wiki/Installing-Neovim&#34;&gt;here&lt;/a&gt;). On ubuntu it is:&lt;/p&gt;
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+&lt;p&gt;To use the python plugins install neovim python package:&lt;/p&gt;
+sudo pip3 install neovim
+#sudo pip2 install neovim
+
+&lt;p&gt;Setup the NeoVim config files.&lt;/p&gt;
+mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
+mkdir $XDG_CONFIG_HOME/nvim # You can link .vim here, but I&#39;m starting from scratch.
+touch $XDG_CONFIG_HOME/nvim/init.vim
+
+&lt;p&gt;Now we install a plugin manager, &lt;a href=&#34;https://github.com/Shougo/dein.vim&#34;&gt;dein.vim&lt;/a&gt;:&lt;/p&gt;
+cd /tmp &amp;&amp; \
+curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh &gt; installer.sh &amp;&amp;\
+mkdir -p $HOME/.random &amp;&amp;\
+sh ./installer.sh $HOME/.random ||\
+echo &#34;Failed.&#34;
+
+&lt;p&gt;The installer will throw a wall of text and ask you to copy-pasta it in your &lt;code&gt;init.vim&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Now we need to let NeoVim know where our python binaries are located.&lt;/p&gt;
+let g:python_host_prog = &#39;/usr/bin/python&#39;
+let g:python3_host_prog = &#39;/usr/bin/python3&#39;
+
+&lt;p&gt;Uncomment the following lines in your &lt;code&gt;init.vim&lt;/code&gt; file, which installs plugins on startup:&lt;/p&gt;
+if dein#check_install()
+  call dein#install()
+endif
+
+&lt;p&gt;Now to install autocomplete for python. We will use &lt;code&gt;deoplete.nvim&lt;/code&gt; with &lt;code&gt;deoplete-jedi&lt;/code&gt; as source.&lt;/p&gt;
+# First install jedi
+sudo pip3 install jedi
+# Also install yapf for formatting
+sudo pip3 install yapf
+
+&lt;p&gt;Now add these lines to your &lt;code&gt;init.vim&lt;/code&gt;:&lt;/p&gt;
+call dein#add(&#39;Shougo/deoplete.nvim&#39;)
+call deoplete#enable()
+
+autocmd FileType python nnoremap &lt;leader&gt;y :0,$!yapf&lt;Cr&gt;
+autocmd CompleteDone * pclose &#34; To close preview window of deoplete automagically
+
+&lt;p&gt;Feel free to checkout my &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/nvim&#34;&gt;NeoVim config&lt;/a&gt; on github.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>My terminal setup 2016</title>
+      <link>http://computableverse.com/blog/my-terminal-setup/</link>
+      <pubDate>Mon, 25 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/my-terminal-setup/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s a pain to remember and reconfigure my keyboard junkie setup every time I change systems, or re-install the OS.&lt;/p&gt;
+
+&lt;p&gt;So I&amp;rsquo;m writing my process down to make it easier to bootstrap and remember.&lt;/p&gt;
+
+&lt;p&gt;You can find my &lt;code&gt;~/dotfiles&lt;/code&gt; repository &lt;a href=&#34;https://github.com/miteshninja/dotfiles&#34; title=&#34;dotfiles.git&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;screenshot&#34;&gt;Screenshot:&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://computableverse.com/assets/images/terminal-01.png&#34;&gt;&lt;img src=&#34;http://computableverse.com/assets/images/terminal-01.png&#34; alt=&#34;screenshot-terminal&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;shell&#34;&gt;Shell&lt;/h3&gt;
+
+&lt;p&gt;My shell of choice is &amp;lsquo;zsh&amp;rsquo;.&lt;/p&gt;
+sudo apt-get install zsh
+chsh -s $(which zsh)
+
+&lt;p&gt;I avoid using frameworks for zsh since most of them are bloated, i.e. contain a lot of excessive functions and options.&lt;/p&gt;
+
+&lt;p&gt;I have a custom &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/zsh&#34; title=&#34;dotfiles/zsh&#34;&gt;zsh cofiguration&lt;/a&gt; picked and parceled from several sources, and I use &lt;a href=&#34;https://github.com/tarjoilija/zgen&#34;&gt;zgen&lt;/a&gt; plugin manager for minimal overhead.&lt;/p&gt;
+
+&lt;p&gt;zgen being extremely easy to install and setup, the whole process of configuring my &lt;em&gt;zsh&lt;/em&gt; can be automated using &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/blob/master/zsh/setup.sh&#34;&gt;this&lt;/a&gt; script:&lt;/p&gt;
+if [ -e ~/.zshrc -o -L ~/.zshrc ]; then
+        echo &#34;Backing up existing .zshrc.&#34;
+        mv ~/.zshrc ~/.zshrc.$(date +%F-%R).bak
+fi
+
+if [ -d ~/.config/zsh -o -L ~/.config/zsh ]; then
+        echo &#34;Backing up zsh folder&#34;
+        mv ~/.config/zsh ~/.config/zsh.$(date +%F-%R).bak
+fi
+
+echo &#34;Soft linking zsh to ~/.config/zsh&#34;
+ln --symbolic -v ${DOTFILESDIR}/zsh ${HOME}/.config/
+
+echo &#34;Soft linking .zshrc to ~/.zshrc&#34;
+ln --symbolic -v ${HOME}/.config/zsh/.zshrc ${HOME}/
+
+if ! [ -e ~/zgen/zgen.zsh -o -L ~/zgen/zgen.zsh ]; then
+	cd ~
+	git clone https://github.com/tarjoilija/zgen
+fi
+
+echo &#34;Now run &#39;source ~/.zshrc&#39; to activate your settings.&#34;
+
+&lt;h3 id=&#34;terminal&#34;&gt;Terminal&lt;/h3&gt;
+
+&lt;p&gt;I use 2 different terminal emulators to suit my needs.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.pleyades.net/david/projects/sakura&#34;&gt;&amp;lsquo;Sakura&amp;rsquo;&lt;/a&gt; is a lightweight, yet configurable terminal emulator with Gtk dependencies.
+I downloaded and set it as my default terminal using:&lt;/p&gt;
+sudo apt-get install sakura
+sudo update-alternatives --config x-terminal-emulator
+gsettings set org.gnome.desktop.default-applications.terminal exec &#39;sakura&#39;
+# if this doesn&#39;t work, run this too
+# gsettings set org.gnome.desktop.default-applications.terminal exec-arg &#34;&#34;
+
+&lt;p&gt;I also installed and set up Guake to have a quick drop down terminal to handle quick one time commands and sometimes the music player.&lt;/p&gt;
+
+&lt;h4 id=&#34;tmux&#34;&gt;Tmux&lt;/h4&gt;
+
+&lt;p&gt;In the above 2 terminal emulators, I almost always have a &lt;a href=&#34;https://tmux.github.io/&#34;&gt;tmux&lt;/a&gt; (terminal-multiplexer) session open. Having the freedom to create and arrange multiple panes and windows is extremely useful.&lt;/p&gt;
+
+&lt;p&gt;I have a simple &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/tmux&#34; title=&#34;dotfiles/tmux&#34;&gt;configuration&lt;/a&gt; present over in my dotfiles repo and actvating it is as simple as linking &lt;code&gt;.tmux.conf&lt;/code&gt; to the &lt;code&gt;~/&lt;/code&gt; $HOME directory.&lt;/p&gt;
+
+&lt;h3 id=&#34;gymnasticz&#34;&gt;GymnasticZ&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m currently using 2 tools for some handy shell gymnastics.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/rupa/z&#34;&gt;&amp;lsquo;z&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This handy tool keeps tracks of your &amp;lsquo;frecency (frequently+recently) used directories and helps you jump around.&lt;/p&gt;
+
+&lt;p&gt;There are many tools available which provide such functionality, like &amp;lsquo;autojmp&amp;rsquo;, &amp;lsquo;v&amp;rsquo;, &amp;lsquo;fasd&amp;rsquo; etc. But I found &amp;lsquo;z&amp;rsquo; to be straight to the point and easy to install. I am currently reading the autojmp source and might try it out later (python ftw!).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/junegunn/fzf/&#34;&gt;&amp;lsquo;fzf&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This one is pretty handy. It&amp;rsquo;s a command line fuzzyfinder tool. It&amp;rsquo;s fast, easy to pipe into, and super easy to setup. It supports fuzzy completion for bash/zsh shell and thus can work with any command  which is pretty handy imo. The reverse fuzzy search and integration with vim is a huge plus.&lt;/p&gt;
+
+&lt;p&gt;Apart from these, I keep expanding my toolset as and when necessary. I haven&amp;rsquo;t talked about &lt;code&gt;vim&lt;/code&gt; or &lt;code&gt;zsh&lt;/code&gt; configuration in details because that&amp;rsquo;s another story for another time!&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Atom: Love at first sight</title>
+      <link>http://computableverse.com/blog/Atom-Love-at-first-sight/</link>
+      <pubDate>Sat, 09 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/Atom-Love-at-first-sight/</guid>
+      <description>&lt;p&gt;I&amp;rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.&lt;/p&gt;
+
+&lt;p&gt;I was tired of switching between the two and figuring out which is better. So I did something &lt;em&gt;unexpected&lt;/em&gt;. I installed &lt;a href=&#34;https://atom.io&#34;&gt;Atom&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;I had tried Atom back in the beta days, and frankly it did not leave a remarkable experience on me. It was slow and clunky, which is why I decided to stick to the &lt;em&gt;top guns&lt;/em&gt; of the time.&lt;/p&gt;
+
+&lt;p&gt;I got Atom v1.3.0 installed on by ubuntu-box and fired it up.&lt;/p&gt;
+sudo add-apt-repository ppa:webupd8team/atom
+sudo apt-get update
+sudo apt-get install atom
+
+&lt;h3 id=&#34;first-looks&#34;&gt;First looks&lt;/h3&gt;
+
+&lt;p&gt;Damn was it beautiful. I knew it that very second, on the &amp;lsquo;Welcome&amp;rsquo; screen, that &lt;strong&gt;this&lt;/strong&gt; is what I&amp;rsquo;m going to be using from now.&lt;/p&gt;
+
+&lt;p&gt;A lot of people argue that aesthetics aren&amp;rsquo;t relevant for a text-editor, after all we do use mono-spaced fonts, and I&amp;rsquo;ve seen countless posts and discussions, usually started by vim/emac fans, revolving around this very fact. But I beg to differ. I stare &lt;em&gt;directly&lt;/em&gt; into an editor for the better part of my day, it makes a huge difference if it is aesthetically pleasing or not.&lt;/p&gt;
+
+&lt;p&gt;That doesn&amp;rsquo;t mean aesthetics &amp;gt; functionality, and that is one of the reasons I don&amp;rsquo;t hate command line embedded editors.&lt;/p&gt;
+
+&lt;h3 id=&#34;beautifying-it-further&#34;&gt;Beautifying it further.&lt;/h3&gt;
+
+&lt;p&gt;With more than 10 built in themes and syntax options, you really don&amp;rsquo;t need to do any more &amp;lsquo;manual&amp;rsquo; customization.&lt;/p&gt;
+
+&lt;p&gt;But that&amp;rsquo;s not going to happen. So here we go.&lt;/p&gt;
+
+&lt;p&gt;A built in package manager is a warm welcome with intuitive and easy ways to customize and install packages, as easy as &lt;code&gt;apm install atom-beautify&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;A quick look over the top packages on their &lt;a href=&#34;https://atom.io/packages/list&#34;&gt;package control site&lt;/a&gt;, gave plenty of amazing packages which could be installed in less than a minute.&lt;/p&gt;
+
+&lt;p&gt;I decided to install these:&lt;/p&gt;
+$ sort apm-packages
+
+atom-beautify
+atom-terminal
+autoclose-html
+autocomplete-paths
+autocomplete-python
+file-icons
+fonts
+git-log
+git-plus
+highlight-selected
+linter
+linter-flake8
+merge-conflicts
+sublime-style-column-selection
+vim-mode
+zen
+
+$ cat apm-packages | xargs apm install
+
+&lt;p&gt;I&amp;rsquo;d advise you against installing all those &lt;em&gt;before&lt;/em&gt; reading what they do. You can however open their respective package pages using this simple command:&lt;/p&gt;
+awk &#39;{print &#34;https://atom.io/packages/&#34;$1}&#39; apm-packages | xargs google-chrome
+
+&lt;p&gt;Changed my font to &lt;strong&gt;Inconsolata-G&lt;/strong&gt; (my current code favourite) using the &lt;code&gt;fonts&lt;/code&gt; package and I was ready to go.&lt;/p&gt;
+
+&lt;h3 id=&#34;with-3-by-github&#34;&gt;&amp;lt; &amp;gt; with &amp;lt;3 by GitHub&lt;/h3&gt;
+
+&lt;p&gt;One would think that a text editor made by GitHub would have excellent Git integration. I wish that were true.&lt;/p&gt;
+
+&lt;p&gt;Yes, they have amazing gutter git-diff colors and several other options like viewing a list of new/modified files since the last commit. Also shows the number of insertion/deletions, branch etc in the status bar.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;git-plus&lt;/code&gt; package adds a lot of functionality like &lt;em&gt;add, push, pull, commit, unstage etc..&lt;/em&gt; which should have been provided in the base installation by atom. The package itself lacks polish and is rather unintuitive to use.&lt;/p&gt;
+
+&lt;p&gt;I constantly found myself switching back to the terminal to interface with Git (&lt;code&gt;atom-terminal&lt;/code&gt; makes this extremely easy).&lt;/p&gt;
+
+&lt;p&gt;Also, GitHub has been strongly in support of Markdown yet I find almost non-existant markdown based features available, except for backtick on-the-fly syntax highlighting and live preview.&lt;/p&gt;
+
+&lt;p&gt;It has also managed to freeze my complete OS (Ubuntu 14.04) twice when using the &lt;code&gt;zen&lt;/code&gt; package written by &lt;em&gt;Chris Wanstrath&lt;/em&gt;, co-founder of GitHub, for distraction free writing (which should have been a feature of the stock editor). I haven&amp;rsquo;t been able to pinpoint or reproduce the issue, but I hope it does not persist.&lt;/p&gt;
+
+&lt;p&gt;Apart from this, and a couple of hiccups like no inbuilt block selections, I&amp;rsquo;m really liking &lt;strong&gt;Atom&lt;/strong&gt; so far.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Cross domain execution of Python scripts using JS, jQ, AJAX.</title>
+      <link>http://computableverse.com/blog/python-javascript-crossdomain-interaction/</link>
+      <pubDate>Thu, 25 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/python-javascript-crossdomain-interaction/</guid>
+      <description>&lt;p&gt;So I&amp;rsquo;ve been learning python scripting, and I&amp;rsquo;ve been trying to figure out a
+very simple and trivial question.. how do I run my python scripts online?&lt;/p&gt;
+
+&lt;p&gt;Not everyone will have access to a machine with python installed, neither will
+everyone wish to install python just to execute scripts. So I wondered if
+there was a way to run the python script on a server and obviously there is.
+It&amp;rsquo;s also quite easy by using a framework like &amp;lsquo;Flask&amp;rsquo; or &amp;lsquo;Bottle&amp;rsquo; or, if you
+dare, &amp;lsquo;Django&amp;rsquo;. But the problem was that they required my whole site to be
+on the same domain.. but that is not what I had in mind.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;I currently host my personal site &lt;a href=&#34;http://miteshshah.com&#34;&gt;miteshshah.com&lt;/a&gt;
+via GitHub Pages, because it&amp;rsquo;s free and natively supports Jekyll (my static
+blogging platform of choice). I wanted the input to my scripts taken from the
+user/client on this website, which will then be relayed over to my server
+which executes the python script with the respective inputs and relays back
+the result to my page @miteshshah.com/&amp;lt;project&amp;gt;.&lt;/p&gt;
+
+&lt;p&gt;But wait a minute.. I have absolutely no idea about web development? So I
+decided to start with some simple Javascript and read this amazing introduction
+by [MDN](). I then realised I need to learn jQuery, AJAX, JSON, HTML headers,
+and, Python web frameworks. I was overwhelmed by the sheer amount of information
+I was about to soak in the next few days. Instead I just decided to start coding.&lt;/p&gt;
+
+&lt;p&gt;I installed flask &lt;code&gt;sudo python3 install flask&lt;/code&gt; and quickly got a basic web app
+running on localhost.&lt;/p&gt;
+from flask import Flask
+app = Flask(__name__)
+ 
+@app.route(&#34;/&lt;int:x&gt;-&lt;int:y&gt;&#34;)
+def sum(x,y):
+    return (&#34;Sum of x + y = &#34; + str(x+y))
+ 
+if __name__ == &#39;__main__&#39;:
+    app.debug = True
+    app.run(host=&#34;127.0.0.1&#34;, port=8800)
+
+&lt;p&gt;I could then go to &lt;a href=&#34;http://127.0.0.1:8800/2-3&#34;&gt;http://127.0.0.1:&lt;sup&gt;8800&lt;/sup&gt;&amp;frasl;&lt;sub&gt;2&lt;/sub&gt;-3&lt;/a&gt; and
+I would get the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Sum of x + y = 5
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So I got my python script running as a webapp. I know had to find a way to get
+the input for this script from the user. Like I said, I had no clue about web
+development so I started looking at forms. HTML tag &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; was a very quick
+and easy way to take input from the user and I quickly made a sample html file
+with input form for my python script.&lt;/p&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt; test_local &lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;p&gt; Sum of two numbers:  &lt;/p&gt;
+        &lt;form&gt;
+            Number 1 : &lt;input type=&#34;text&#34; name=&#34;n1&#34;&gt;
+            number 2 : &lt;input type=&#34;text&#34; name=&#34;n2&#34;&gt;
+            &lt;input type=&#34;button&#34; value=&#34;Click&#34; onClick=&#34;&#34;&gt;
+        &lt;/form&gt;
+        &lt;div class=&#34;result&#34;&gt;
+        &lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+
+&lt;p&gt;So now I could take input from the user. I somehow had to feed this input into my python script. I first tried doing it via pure javascript alone. A little bit of searching convinced me to instead use AJAX + jQuery.&lt;/p&gt;
+
+&lt;p&gt;I came up with the following solution:&lt;/p&gt;
+function testFunc (form) {
+    var x = form.n1.value;
+    var y = form.n2.value;
+ 
+    $.ajax({
+        type: &#39;GET&#39;,            
+        slug: .0.0.1:5000/&#34;+x+&#34;-&#34;+y,
+        contentType: &#39;text/plain&#39;,
+        success: function(response, textStat){
+            response = &#34;The total sum is&#34; + response;
+                $(&#39;.result&#39;).html(response);    
+            }
+    });
+}
+
+&lt;p&gt;This would take the answer from my python script and insert it inside the div tag with class &amp;ldquo;.result&amp;rdquo;, atleast it would in theory.&lt;/p&gt;
+
+&lt;p&gt;Having absolutely no knowledge about JS, jQuery or AJAX. It was hard for me to debug my own code.&lt;/p&gt;
+
+&lt;p&gt;There was a particular error which took me quite some time to figure out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;XMLHttpRequest cannot load http://127.0.0.1:8800/2-3. No &#39;Access-Control-Allow-Origin&#39; header is present on the requested resource. Origin &#39;null&#39; is therefore not allowed access.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is when I learned that my sample site was not authorised to transfer/relay data on another server/host. I fixed this by including a header to the respone in my python app.&lt;/p&gt;
+@app.route(&#34;/&lt;int:x&gt;-&lt;int:y&gt;&#34;)
+def sum(x, y):
+  resp = make_response(str(x + y))
+  resp.headers[&#39;Access-Control-Allow-Origin&#39;] = &#39;*&#39;
+  return resp
+
+&lt;p&gt;I included some more CORS code in jQuery/ajax function, but I don&amp;rsquo;t quite understand it completely.&lt;/p&gt;
+
+&lt;p&gt;The final result can be seen here: &lt;a href=&#34;http://miteshshah.com/sample&#34;&gt;http://miteshshah.com/sample&lt;/a&gt;.  [EDIT: I&amp;rsquo;ve taken this down, but you should still try this on your own. It works :P]&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

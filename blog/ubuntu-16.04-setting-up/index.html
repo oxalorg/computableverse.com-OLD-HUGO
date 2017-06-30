@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>How I set up my fresh Ubuntu 16.04 install.</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='linux,guide,ubuntu,install' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="How I set up my fresh Ubuntu 16.04 install." />
+<meta property="og:description" content="Even though I don&rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &lsquo;just works&rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the Arch Way. Till then, let me fill my pockets with Ubuntu releases.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/ubuntu-16.04-setting-up/" />
+
+
+<meta property="og:updated_time" content="2016-06-04T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="How I set up my fresh Ubuntu 16.04 install.">
+<meta itemprop="description" content="Even though I don&rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &lsquo;just works&rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the Arch Way. Till then, let me fill my pockets with Ubuntu releases.
+
+">
+
+
+<meta itemprop="dateModified" content="2016-06-04T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="523">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="How I set up my fresh Ubuntu 16.04 install."/>
+<meta name="twitter:description" content="Even though I don&rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &lsquo;just works&rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the Arch Way. Till then, let me fill my pockets with Ubuntu releases.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">How I set up my fresh Ubuntu 16.04 install.</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-06-04T00:00:00Z">June 4, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/linux">linux</a>, <a href="http://computableverse.com/tags/guide">guide</a>, <a href="http://computableverse.com/tags/ubuntu">ubuntu</a>, <a href="http://computableverse.com/tags/install">install</a></span>
+    
+</small>
+ </p>
+
+<p>Even though I don&rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &lsquo;just works&rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the <em>Arch Way</em>. Till then, let me fill my pockets with Ubuntu releases.</p>
+
+<p></p>
+
+<p>Whats the most important thing on a fresh OS install? Definitely the looks, I would say. I started with installing the <code>unity-tweak-tool</code>, a system-wide GTK3+ theme <code>Arc-Dark</code><sup><a href="https://github.com/horst3180/arc-theme">link</a></sup>, and an icon pack <code>paper-icon-theme</code><sup><a href="https://snwh.org/paper/icons">link</a></sup>.</p>
+sudo apt install -y unity-tweak-tool
+
+# Arc theme
+wget http://download.opensuse.org/repositories/home:Horst3180/xUbuntu_15.10/Release.key
+sudo apt-key add - < Release.key
+sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/Horst3180/xUbuntu_15.10/ /' >> /etc/apt/sources.list.d/arc-theme.list"
+sudo apt update
+sudo apt -y install arc-theme
+
+# Paper icons
+sudo add-apt-repository ppa:snwh/pulp
+sudo apt update
+sudo apt install -y paper-icon-theme # paper-gtk-theme
+
+<p>Amazingly, the <code>Arc-Dark</code> theme has a complimentary <a href="https://github.com/horst3180/arc-firefox-theme">Arc-Firefox theme</a> to go with it. It has some inconsistencies, which I fixed using simple stylesheets.</p>
+/* https://wiki.archlinux.org/index.php/Firefox#Unreadable_input_fields_with_dark_GTK.2B_themes
+ * Add the below css to
+ * ~/.mozilla/firefox/xxxxxxxx.default/chrome/userContent.css
+*/
+input:not(.urlbar-input):not(.textbox-input):not(.form-control):not([type='checkbox']) {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+#downloads-indicator-counter {
+    color: white;
+}
+
+textarea {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+select {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+<p>Now that my desktop looked pretty. It was time for some functionality.</p>
+
+<ul>
+<li><strong>Synaptic</strong> : Although using <code>apt</code> is really easy. It&rsquo;s always good to have a a graphical package manager for times when you&rsquo;re lazy ;P</li>
+<li><strong>gdebi</strong> : Installing .deb files with command line is pure torture (wait until you have unmet dependecies and watch the hell burn down). Instead, just install gdebi and let the demon die.</li>
+<li><strong>nautilus-dropbox</strong> : I use dropbox a lot. I don&rsquo;t like being dependent on software, but hell I&rsquo;m dependent on dropbox. I mostly use it to work on projects across different devices. And <em>everything</em> else too. I literally don&rsquo;t use my hard disk at all, apart for local dropbox storage ofcourse. This bugs me a lot to be honest, I might think of encrypting everything before uploading on dropbox. Will have to read their TOS first.</li>
+<li><strong>keepassx</strong> : I feel that I could talk a lot more about a password manager than the scanty space available in this puny unordered list.</li>
+</ul>
+
+<p>I also installed the following:</p>
+
+<ul>
+<li><strong>atom</strong>: a text editor.</li>
+<li><strong>Chrome</strong>: Incase firefox fails me.</li>
+<li><strong>GitKraken</strong>: graphic git</li>
+<li><strong>HexChat</strong>: IRC - <code>MiteshNinja</code></li>
+<li><strong>kdenlive</strong>: video editor.</li>
+<li><strong>NeoVim</strong>: yet another text editor.</li>
+<li><strong>simplescreenrecorder</strong>: simple screen recorder.</li>
+<li><strong>Steam</strong></li>
+<li><strong>umake</strong>: ubuntu-make to install PyCharm and CLion.</li>
+<li><strong>VLC</strong></li>
+<li><strong>zsh</strong>: get this. now.</li>
+</ul>
+
+<p>Some of the above programs were installed using these commands:</p>
+sudo apt install -y synaptic gdebi nautilus-dropbox keepassx kdenlive google-chrome zsh
+
+# Screen recorder
+sudo add-apt-repository ppa:maarten-baert/simplescreenrecorder
+sudo apt update
+sudo apt install -y simplescreenrecorder
+
+<p>The only thing I lack is a decent email notification system. I am currently using a simple python + cron script to get the job done, but I&rsquo;ll soon be writing an appindicator/status bar application to get that to check my emails for me.</p>
+
+<p>I also set up my terminal, which I&rsquo;ve described in this <a href="http://computableverse.com/blog/my-terminal-setup">post</a>.</p>
+
+<p>What do <em>you</em> do on a fresh OS install?</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/ubuntu-16.04-setting-up\/';
+    var disqus_title = 'How I set up my fresh Ubuntu 16.04 install.';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/ubuntu-16.04-setting-up\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

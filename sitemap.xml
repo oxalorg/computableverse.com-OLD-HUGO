@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://computableverse.com/blog/pytest-sharing-class-fixtures/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/</loc>
+    <lastmod>2017-02-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/nginx-autoindex-try-files/</loc>
+    <lastmod>2017-01-26T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/about/</loc>
+    <lastmod>2017-01-07T15:58:12+05:30</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/create-website-using-pandoc-make-file/</loc>
+    <lastmod>2016-10-28T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/guide-installing-stagit-macos-osx/</loc>
+    <lastmod>2016-10-01T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/guide-publish-distribute-python-app/</loc>
+    <lastmod>2016-07-30T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/flask-admin-using-basicauth/</loc>
+    <lastmod>2016-07-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/implement-https-using-ssl-tls-free-fast/</loc>
+    <lastmod>2016-06-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/ubuntu-16.04-setting-up/</loc>
+    <lastmod>2016-06-04T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/neovim-guide-python/</loc>
+    <lastmod>2016-05-21T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/my-terminal-setup/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/Atom-Love-at-first-sight/</loc>
+    <lastmod>2016-01-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/python-javascript-crossdomain-interaction/</loc>
+    <lastmod>2015-06-25T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/ajax/</loc>
+    <lastmod>2015-06-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/atom/</loc>
+    <lastmod>2016-01-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/autocomplete/</loc>
+    <lastmod>2016-05-21T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/blog/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/cors/</loc>
+    <lastmod>2015-06-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/django/</loc>
+    <lastmod>2017-02-26T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/dotfiles/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/fix/</loc>
+    <lastmod>2017-02-26T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/flask/</loc>
+    <lastmod>2016-07-14T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/git/</loc>
+    <lastmod>2016-10-01T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/guide/</loc>
+    <lastmod>2016-10-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/https/</loc>
+    <lastmod>2016-06-12T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/install/</loc>
+    <lastmod>2016-06-04T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/letsencrypt/</loc>
+    <lastmod>2016-06-12T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/linux/</loc>
+    <lastmod>2016-06-04T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/macos/</loc>
+    <lastmod>2016-10-01T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/markdown/</loc>
+    <lastmod>2016-10-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/neovim/</loc>
+    <lastmod>2016-05-21T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/nginx/</loc>
+    <lastmod>2017-02-26T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/page/</loc>
+    <lastmod>2017-01-07T15:58:12+05:30</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/pandoc/</loc>
+    <lastmod>2016-10-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/publishing/</loc>
+    <lastmod>2016-07-30T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/pypi/</loc>
+    <lastmod>2016-07-30T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/python/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/setup/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/ssl/</loc>
+    <lastmod>2016-06-12T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/stagit/</loc>
+    <lastmod>2016-10-01T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/static-site-generators/</loc>
+    <lastmod>2016-10-28T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/sysadmin/</loc>
+    <lastmod>2016-06-12T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/terminal/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/testing/</loc>
+    <lastmod>2017-03-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/text-editors/</loc>
+    <lastmod>2016-01-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/thoughts/</loc>
+    <lastmod>2016-01-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/til/</loc>
+    <lastmod>2015-06-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/ubuntu/</loc>
+    <lastmod>2016-06-04T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/vim/</loc>
+    <lastmod>2016-01-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/web/</loc>
+    <lastmod>2016-07-14T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/workflow/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://computableverse.com/tags/zsh/</loc>
+    <lastmod>2016-01-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

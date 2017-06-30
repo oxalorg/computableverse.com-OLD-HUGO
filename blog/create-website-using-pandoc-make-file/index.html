@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Convert any folder into a website using Pandoc and a Makefile</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='static site generators,guide,pandoc,markdown' />
+    
+        <meta name="author" content="Mitesh Shah" />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Convert any folder into a website using Pandoc and a Makefile" />
+<meta property="og:description" content="It was a long day. I was lurking HackerNews and /r/programming.
+Things were going slow. I had been taking quite a lot of notes
+inside a plain ol&rsquo; directory. I know, 2016 right?! But every
+single note taking application had failed me.
+
+Although I had no use of viewing my markdown notes in the
+browser, I decided to do it anyways. For the sake of completeness.
+
+I immediately thought of dystic,
+my personal static site generator, but dissed it as too heavy.
+I decided then, that I wanted something I could hack together in
+the next 10 minutes.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/create-website-using-pandoc-make-file/" />
+
+
+<meta property="og:updated_time" content="2016-10-28T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Convert any folder into a website using Pandoc and a Makefile">
+<meta itemprop="description" content="It was a long day. I was lurking HackerNews and /r/programming.
+Things were going slow. I had been taking quite a lot of notes
+inside a plain ol&rsquo; directory. I know, 2016 right?! But every
+single note taking application had failed me.
+
+Although I had no use of viewing my markdown notes in the
+browser, I decided to do it anyways. For the sake of completeness.
+
+I immediately thought of dystic,
+my personal static site generator, but dissed it as too heavy.
+I decided then, that I wanted something I could hack together in
+the next 10 minutes.
+
+">
+
+
+<meta itemprop="dateModified" content="2016-10-28T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="450">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Convert any folder into a website using Pandoc and a Makefile"/>
+<meta name="twitter:description" content="It was a long day. I was lurking HackerNews and /r/programming.
+Things were going slow. I had been taking quite a lot of notes
+inside a plain ol&rsquo; directory. I know, 2016 right?! But every
+single note taking application had failed me.
+
+Although I had no use of viewing my markdown notes in the
+browser, I decided to do it anyways. For the sake of completeness.
+
+I immediately thought of dystic,
+my personal static site generator, but dissed it as too heavy.
+I decided then, that I wanted something I could hack together in
+the next 10 minutes.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Convert any folder into a website using Pandoc and a Makefile</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-10-28T00:00:00Z">October 28, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/static-site-generators">static site generators</a>, <a href="http://computableverse.com/tags/guide">guide</a>, <a href="http://computableverse.com/tags/pandoc">pandoc</a>, <a href="http://computableverse.com/tags/markdown">markdown</a></span>
+    
+</small>
+ </p>
+
+<p>It was a long day. I was lurking HackerNews and /r/programming.
+Things were going slow. I had been taking quite a lot of notes
+inside a plain ol&rsquo; directory. I know, 2016 right?! But every
+single note taking application had failed me.</p>
+
+<p>Although I had no use of viewing my <em>markdown</em> notes in the
+browser, I decided to do it anyways. For the sake of completeness.</p>
+
+<p>I immediately thought of <a href="https://github.com/oxalorg/dystic">dystic</a>,
+my personal static site generator, but dissed it as too heavy.
+I decided then, that I wanted something I could hack together in
+the next 10 minutes.</p>
+
+<p></p>
+
+<p>I immediately thought of <a href="https://pandoc.org">pandoc</a>.</p>
+
+<pre><code>pandoc --toc --from markdown --to html my-note.md -o my-note.html
+</code></pre>
+
+<p>Done. Easy, wasn&rsquo;t it?</p>
+
+<p>Now let&rsquo;s do this for the entire directory, <em>recursively</em>. We could
+write a simple shell script, but that would run everytime on everyfile.
+We don&rsquo;t want that. We want to regenerate the <em>html</em> only if the
+<em>markdown</em> counterpart has been updated since the previous build.</p>
+
+<p>What <del>better</del> faster way than to use GNU Make for <code>mtime</code> based
+builds.</p>
+
+<pre><code>cd /notes
+nvim Makefile
+</code></pre>
+
+<p><strong>/notes/Makefile</strong>:</p>
+# Find all markdown files
+MARKDOWN=$(shell find . -iname "*.md")
+# Form all 'html' counterparts
+HTML=$(MARKDOWN:.md=.html)
+
+.PHONY = all tar clean
+all: $(HTML)
+
+%.html: %.md
+    pandoc --from markdown --to html $< -o $@
+
+tar: $(MARKDOWN)
+    tar --exclude=notes.tar.gz --exclude=.git/ -czvf notes.tar.gz ./
+
+clean:
+    rm $(HTML)
+
+<p>We&rsquo;re almost done. Now just run <code>make all</code> in <code>/notes</code> and all your
+<em>markdown</em> files will be built into <em>html</em> files.</p>
+
+<p>Run <code>make clean</code> to remove all the html files and run <code>make tar</code> to
+backup all your notes.</p>
+
+<p>Simply open your browser and type &ldquo;/notes&rdquo; (or your complete
+path) into the address bar and voila! It&rsquo;s not pretty but it
+works. (PS: use <code>file:///path/to/folder</code> if not using chrome)</p>
+
+<hr />
+
+<p>To make your files more pretty use my minimal css theme
+<a href="https://github.com/oxalorg/sakura">sakura</a> and then change the pandoc
+command as follows:</p>
+
+<pre><code>cd /notes
+wget &quot;https://raw.githubusercontent.com/oxalorg/sakura/master/sakura.css&quot;
+pandoc --css /notes/sakura.css --from markdown --to html $&lt; -o $@
+</code></pre>
+
+<p>Now you can remote sync the entire website easily using rsync:</p>
+
+<pre><code>rsync --exclude '*.md' source/ destination/
+</code></pre>
+
+<p>That&rsquo;s the basics. This can easily be used to create your own
+blog, websites, small projects, pretty much anything. The
+best part being that it needs no &lsquo;rules&rsquo; from your end,
+you&rsquo;re free to structure your content anyway you like; something
+which is missing from almost every static site generator out
+there. This is one of my quibbles which I&rsquo;m trying to fix with
+<a href="https://github.com/oxalorg/dystic">dystic</a>.</p>
+
+<p>I added a couple more feature including making automatic
+indexes, sorting using title/date, metadata parsing etc. But I
+quickly realised that it&rsquo;s a lot of pain to be doing it using
+<em>only</em> GNU Make. So I&rsquo;ve decided to start working on <code>dystic</code>
+again. Maybe even re-write it in <code>nim</code> or <code>golang</code>.</p>
+
+<p>Let me know your comments below.</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/create-website-using-pandoc-make-file\/';
+    var disqus_title = 'Convert any folder into a website using Pandoc and a Makefile';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/create-website-using-pandoc-make-file\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

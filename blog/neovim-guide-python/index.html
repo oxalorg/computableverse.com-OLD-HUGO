@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NeoVim quick starter guide with python autocomplete.</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='guide,python,neovim,autocomplete' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="NeoVim quick starter guide with python autocomplete." />
+<meta property="og:description" content="So there&rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/neovim-guide-python/" />
+
+
+<meta property="og:updated_time" content="2016-05-21T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="NeoVim quick starter guide with python autocomplete.">
+<meta itemprop="description" content="So there&rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.
+
+">
+
+
+<meta itemprop="dateModified" content="2016-05-21T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="241">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="NeoVim quick starter guide with python autocomplete."/>
+<meta name="twitter:description" content="So there&rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">NeoVim quick starter guide with python autocomplete.</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-05-21T00:00:00Z">May 21, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/guide">guide</a>, <a href="http://computableverse.com/tags/python">python</a>, <a href="http://computableverse.com/tags/neovim">neovim</a>, <a href="http://computableverse.com/tags/autocomplete">autocomplete</a></span>
+    
+</small>
+ </p>
+
+<p>So there&rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.</p>
+
+<p></p>
+
+<p>Install neovim (guide <a href="https://github.com/neovim/neovim/wiki/Installing-Neovim">here</a>). On ubuntu it is:</p>
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+<p>To use the python plugins install neovim python package:</p>
+sudo pip3 install neovim
+#sudo pip2 install neovim
+
+<p>Setup the NeoVim config files.</p>
+mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
+mkdir $XDG_CONFIG_HOME/nvim # You can link .vim here, but I'm starting from scratch.
+touch $XDG_CONFIG_HOME/nvim/init.vim
+
+<p>Now we install a plugin manager, <a href="https://github.com/Shougo/dein.vim">dein.vim</a>:</p>
+cd /tmp && \
+curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh > installer.sh &&\
+mkdir -p $HOME/.random &&\
+sh ./installer.sh $HOME/.random ||\
+echo "Failed."
+
+<p>The installer will throw a wall of text and ask you to copy-pasta it in your <code>init.vim</code> file.</p>
+
+<p>Now we need to let NeoVim know where our python binaries are located.</p>
+let g:python_host_prog = '/usr/bin/python'
+let g:python3_host_prog = '/usr/bin/python3'
+
+<p>Uncomment the following lines in your <code>init.vim</code> file, which installs plugins on startup:</p>
+if dein#check_install()
+  call dein#install()
+endif
+
+<p>Now to install autocomplete for python. We will use <code>deoplete.nvim</code> with <code>deoplete-jedi</code> as source.</p>
+# First install jedi
+sudo pip3 install jedi
+# Also install yapf for formatting
+sudo pip3 install yapf
+
+<p>Now add these lines to your <code>init.vim</code>:</p>
+call dein#add('Shougo/deoplete.nvim')
+call deoplete#enable()
+
+autocmd FileType python nnoremap <leader>y :0,$!yapf<Cr>
+autocmd CompleteDone * pclose " To close preview window of deoplete automagically
+
+<p>Feel free to checkout my <a href="https://github.com/MiteshNinja/dotfiles/tree/master/nvim">NeoVim config</a> on github.</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/neovim-guide-python\/';
+    var disqus_title = 'NeoVim quick starter guide with python autocomplete.';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/neovim-guide-python\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

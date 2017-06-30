@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Install on Computable(verse)</title>
+    <link>http://computableverse.com/tags/install/index.xml</link>
+    <description>Recent content in Install on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/install/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>How I set up my fresh Ubuntu 16.04 install.</title>
+      <link>http://computableverse.com/blog/ubuntu-16.04-setting-up/</link>
+      <pubDate>Sat, 04 Jun 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/ubuntu-16.04-setting-up/</guid>
+      <description>&lt;p&gt;Even though I don&amp;rsquo;t change my OS too frequently. I almost always end up tinkering around with it once every 2-3 months. I keep finding myself coming back to Canonicals Ubuntu, mostly because everything &amp;lsquo;just works&amp;rsquo;. Lets hope, that someday, I can muster the courage to take the leap and purify myself on the path to the &lt;em&gt;Arch Way&lt;/em&gt;. Till then, let me fill my pockets with Ubuntu releases.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Whats the most important thing on a fresh OS install? Definitely the looks, I would say. I started with installing the &lt;code&gt;unity-tweak-tool&lt;/code&gt;, a system-wide GTK3+ theme &lt;code&gt;Arc-Dark&lt;/code&gt;&lt;sup&gt;&lt;a href=&#34;https://github.com/horst3180/arc-theme&#34;&gt;link&lt;/a&gt;&lt;/sup&gt;, and an icon pack &lt;code&gt;paper-icon-theme&lt;/code&gt;&lt;sup&gt;&lt;a href=&#34;https://snwh.org/paper/icons&#34;&gt;link&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+sudo apt install -y unity-tweak-tool
+
+# Arc theme
+wget http://download.opensuse.org/repositories/home:Horst3180/xUbuntu_15.10/Release.key
+sudo apt-key add - &lt; Release.key
+sudo sh -c &#34;echo &#39;deb http://download.opensuse.org/repositories/home:/Horst3180/xUbuntu_15.10/ /&#39; &gt;&gt; /etc/apt/sources.list.d/arc-theme.list&#34;
+sudo apt update
+sudo apt -y install arc-theme
+
+# Paper icons
+sudo add-apt-repository ppa:snwh/pulp
+sudo apt update
+sudo apt install -y paper-icon-theme # paper-gtk-theme
+
+&lt;p&gt;Amazingly, the &lt;code&gt;Arc-Dark&lt;/code&gt; theme has a complimentary &lt;a href=&#34;https://github.com/horst3180/arc-firefox-theme&#34;&gt;Arc-Firefox theme&lt;/a&gt; to go with it. It has some inconsistencies, which I fixed using simple stylesheets.&lt;/p&gt;
+/* https://wiki.archlinux.org/index.php/Firefox#Unreadable_input_fields_with_dark_GTK.2B_themes
+ * Add the below css to
+ * ~/.mozilla/firefox/xxxxxxxx.default/chrome/userContent.css
+*/
+input:not(.urlbar-input):not(.textbox-input):not(.form-control):not([type=&#39;checkbox&#39;]) {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+#downloads-indicator-counter {
+    color: white;
+}
+
+textarea {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+select {
+    -moz-appearance: none !important;
+    background-color: white;
+    color: black;
+}
+
+&lt;p&gt;Now that my desktop looked pretty. It was time for some functionality.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Synaptic&lt;/strong&gt; : Although using &lt;code&gt;apt&lt;/code&gt; is really easy. It&amp;rsquo;s always good to have a a graphical package manager for times when you&amp;rsquo;re lazy ;P&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;gdebi&lt;/strong&gt; : Installing .deb files with command line is pure torture (wait until you have unmet dependecies and watch the hell burn down). Instead, just install gdebi and let the demon die.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;nautilus-dropbox&lt;/strong&gt; : I use dropbox a lot. I don&amp;rsquo;t like being dependent on software, but hell I&amp;rsquo;m dependent on dropbox. I mostly use it to work on projects across different devices. And &lt;em&gt;everything&lt;/em&gt; else too. I literally don&amp;rsquo;t use my hard disk at all, apart for local dropbox storage ofcourse. This bugs me a lot to be honest, I might think of encrypting everything before uploading on dropbox. Will have to read their TOS first.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;keepassx&lt;/strong&gt; : I feel that I could talk a lot more about a password manager than the scanty space available in this puny unordered list.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I also installed the following:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;atom&lt;/strong&gt;: a text editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Chrome&lt;/strong&gt;: Incase firefox fails me.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GitKraken&lt;/strong&gt;: graphic git&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;HexChat&lt;/strong&gt;: IRC - &lt;code&gt;MiteshNinja&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;kdenlive&lt;/strong&gt;: video editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;NeoVim&lt;/strong&gt;: yet another text editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;simplescreenrecorder&lt;/strong&gt;: simple screen recorder.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Steam&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;umake&lt;/strong&gt;: ubuntu-make to install PyCharm and CLion.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;VLC&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;zsh&lt;/strong&gt;: get this. now.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Some of the above programs were installed using these commands:&lt;/p&gt;
+sudo apt install -y synaptic gdebi nautilus-dropbox keepassx kdenlive google-chrome zsh
+
+# Screen recorder
+sudo add-apt-repository ppa:maarten-baert/simplescreenrecorder
+sudo apt update
+sudo apt install -y simplescreenrecorder
+
+&lt;p&gt;The only thing I lack is a decent email notification system. I am currently using a simple python + cron script to get the job done, but I&amp;rsquo;ll soon be writing an appindicator/status bar application to get that to check my emails for me.&lt;/p&gt;
+
+&lt;p&gt;I also set up my terminal, which I&amp;rsquo;ve described in this &lt;a href=&#34;http://computableverse.com/blog/my-terminal-setup&#34;&gt;post&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;What do &lt;em&gt;you&lt;/em&gt; do on a fresh OS install?&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

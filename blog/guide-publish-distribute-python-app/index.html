@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guide to easy publishing and distributing your python application</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='guide,python,publishing,pypi' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Guide to easy publishing and distributing your python application" />
+<meta property="og:description" content="Let me be real for a second. It&rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&rsquo;s a breeze. Here&rsquo;s a clean, small, and quick guide explaining just that. No bullshit.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/guide-publish-distribute-python-app/" />
+
+
+<meta property="og:updated_time" content="2016-07-30T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Guide to easy publishing and distributing your python application">
+<meta itemprop="description" content="Let me be real for a second. It&rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&rsquo;s a breeze. Here&rsquo;s a clean, small, and quick guide explaining just that. No bullshit.
+
+">
+
+
+<meta itemprop="dateModified" content="2016-07-30T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="292">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Guide to easy publishing and distributing your python application"/>
+<meta name="twitter:description" content="Let me be real for a second. It&rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&rsquo;s a breeze. Here&rsquo;s a clean, small, and quick guide explaining just that. No bullshit.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Guide to easy publishing and distributing your python application</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-07-30T00:00:00Z">July 30, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/guide">guide</a>, <a href="http://computableverse.com/tags/python">python</a>, <a href="http://computableverse.com/tags/publishing">publishing</a>, <a href="http://computableverse.com/tags/pypi">pypi</a></span>
+    
+</small>
+ </p>
+
+<p>Let me be real for a second. It&rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&rsquo;s a breeze. Here&rsquo;s a clean, small, and quick guide explaining just that. No bullshit.</p>
+
+<p></p>
+
+<p>First <code>cd</code> into your project folder, preferably with <code>vitrualenv</code> active. Then create a <code>setup.py</code> file in the directory similar to this:</p>
+from setuptools import setup
+from proj import _VERSION
+setup(
+    name='<proj>',
+    packages=['<proj>'],
+    version=_VERSION, 
+    description='<proj>',
+    long_description='Please visit https://github.com/MiteshNinja/<proj> for more details.',
+    author='Mitesh Shah',
+    author_email='mitesh@miteshshah.com',
+    url='https://github.com/MiteshNinja/<proj>',
+    download_url='https://github.com/MiteshNinja/<proj>/tarball/' +
+    _VERSION,
+    keywords=['python', 'proj'],
+    classifiers=[],
+    install_requires=[
+        'package1', 'package2', 'package3'
+    ],
+    entry_points={
+        'console_scripts': [
+            'proj=proj:main',
+        ],
+    })
+
+<p>Now install the binary using:</p>
+
+<pre><code>python3 setup.py bdist_wheel
+pip3 install dist/dystic...[TAB to autocomplete]
+</code></pre>
+
+<p>The application will get installed and a <code>dist</code> and <code>build</code> directory will be also be created.</p>
+
+<p>With the <code>virtualenv</code> active, make sure the application got installed by either running the command line binary, or running a python interpreter and checking as follows:</p>
+>>> import dystic
+>>> dystic
+<module 'dystic' from '/home/ox/Dropbox/Projects/dystic/venv/lib/python3.5/site-packages/dystic/__init__.py'>
+
+<p>Now inside your <code>proj/__init__.py</code> file, include a variable as follows:</p>
+_VERSION = 0.1.0
+
+<p>You only need to change this version and commit whenever making a version change, ofcourse also rebuilding the wheels.</p>
+
+<p>To distribute the application on <code>pypi</code>, go to <a href="https://pypi.python.org/pypi">https://pypi.python.org/pypi</a> and create an account and create a file <code>~/.pypirc</code> as follows:</p>
+
+<pre><code>[distutils]
+index-servers=
+    pypi
+    pypitest
+
+[pypitest]
+repository = https://testpypi.python.org/pypi
+username = MiteshNinja
+password = password
+
+[pypi]
+repository = https://pypi.python.org/pypi
+username = MiteshNinja
+password = password
+</code></pre>
+
+<p><em>Note: you can also create an account on pypitest server to test your app beforehand.</em></p>
+
+<p>Now for uploading you need <code>twine</code>. Install as:</p>
+
+<pre><code>pip3 install twine
+</code></pre>
+
+<p>To upload to pypi, simply run:</p>
+
+<pre><code>twine upload dist/&lt;proj&gt;-&lt;version&gt;-py3-none-any.whl
+# or any .whl file created in dist folder
+</code></pre>
+
+<p>Voila. That&rsquo;s about it. You can now <code>pip3 install &lt;proj&gt;</code> from anywhere :)</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/guide-publish-distribute-python-app\/';
+    var disqus_title = 'Guide to easy publishing and distributing your python application';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/guide-publish-distribute-python-app\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atom: Love at first sight</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='workflow,thoughts,text editors,atom,vim' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Atom: Love at first sight" />
+<meta property="og:description" content="I&rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.
+
+I was tired of switching between the two and figuring out which is better. So I did something unexpected. I installed Atom.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/Atom-Love-at-first-sight/" />
+
+
+<meta property="og:updated_time" content="2016-01-09T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Atom: Love at first sight">
+<meta itemprop="description" content="I&rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.
+
+I was tired of switching between the two and figuring out which is better. So I did something unexpected. I installed Atom.
+
+">
+
+
+<meta itemprop="dateModified" content="2016-01-09T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="611">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Atom: Love at first sight"/>
+<meta name="twitter:description" content="I&rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.
+
+I was tired of switching between the two and figuring out which is better. So I did something unexpected. I installed Atom.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Atom: Love at first sight</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-01-09T00:00:00Z">January 9, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/workflow">workflow</a>, <a href="http://computableverse.com/tags/thoughts">thoughts</a>, <a href="http://computableverse.com/tags/text-editors">text editors</a>, <a href="http://computableverse.com/tags/atom">atom</a>, <a href="http://computableverse.com/tags/vim">vim</a></span>
+    
+</small>
+ </p>
+
+<p>I&rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.</p>
+
+<p>I was tired of switching between the two and figuring out which is better. So I did something <em>unexpected</em>. I installed <a href="https://atom.io">Atom</a>.</p>
+
+<p></p>
+
+<p>I had tried Atom back in the beta days, and frankly it did not leave a remarkable experience on me. It was slow and clunky, which is why I decided to stick to the <em>top guns</em> of the time.</p>
+
+<p>I got Atom v1.3.0 installed on by ubuntu-box and fired it up.</p>
+sudo add-apt-repository ppa:webupd8team/atom
+sudo apt-get update
+sudo apt-get install atom
+
+<h3 id="first-looks">First looks</h3>
+
+<p>Damn was it beautiful. I knew it that very second, on the &lsquo;Welcome&rsquo; screen, that <strong>this</strong> is what I&rsquo;m going to be using from now.</p>
+
+<p>A lot of people argue that aesthetics aren&rsquo;t relevant for a text-editor, after all we do use mono-spaced fonts, and I&rsquo;ve seen countless posts and discussions, usually started by vim/emac fans, revolving around this very fact. But I beg to differ. I stare <em>directly</em> into an editor for the better part of my day, it makes a huge difference if it is aesthetically pleasing or not.</p>
+
+<p>That doesn&rsquo;t mean aesthetics &gt; functionality, and that is one of the reasons I don&rsquo;t hate command line embedded editors.</p>
+
+<h3 id="beautifying-it-further">Beautifying it further.</h3>
+
+<p>With more than 10 built in themes and syntax options, you really don&rsquo;t need to do any more &lsquo;manual&rsquo; customization.</p>
+
+<p>But that&rsquo;s not going to happen. So here we go.</p>
+
+<p>A built in package manager is a warm welcome with intuitive and easy ways to customize and install packages, as easy as <code>apm install atom-beautify</code>.</p>
+
+<p>A quick look over the top packages on their <a href="https://atom.io/packages/list">package control site</a>, gave plenty of amazing packages which could be installed in less than a minute.</p>
+
+<p>I decided to install these:</p>
+$ sort apm-packages
+
+atom-beautify
+atom-terminal
+autoclose-html
+autocomplete-paths
+autocomplete-python
+file-icons
+fonts
+git-log
+git-plus
+highlight-selected
+linter
+linter-flake8
+merge-conflicts
+sublime-style-column-selection
+vim-mode
+zen
+
+$ cat apm-packages | xargs apm install
+
+<p>I&rsquo;d advise you against installing all those <em>before</em> reading what they do. You can however open their respective package pages using this simple command:</p>
+awk '{print "https://atom.io/packages/"$1}' apm-packages | xargs google-chrome
+
+<p>Changed my font to <strong>Inconsolata-G</strong> (my current code favourite) using the <code>fonts</code> package and I was ready to go.</p>
+
+<h3 id="with-3-by-github">&lt; &gt; with &lt;3 by GitHub</h3>
+
+<p>One would think that a text editor made by GitHub would have excellent Git integration. I wish that were true.</p>
+
+<p>Yes, they have amazing gutter git-diff colors and several other options like viewing a list of new/modified files since the last commit. Also shows the number of insertion/deletions, branch etc in the status bar.</p>
+
+<p>The <code>git-plus</code> package adds a lot of functionality like <em>add, push, pull, commit, unstage etc..</em> which should have been provided in the base installation by atom. The package itself lacks polish and is rather unintuitive to use.</p>
+
+<p>I constantly found myself switching back to the terminal to interface with Git (<code>atom-terminal</code> makes this extremely easy).</p>
+
+<p>Also, GitHub has been strongly in support of Markdown yet I find almost non-existant markdown based features available, except for backtick on-the-fly syntax highlighting and live preview.</p>
+
+<p>It has also managed to freeze my complete OS (Ubuntu 14.04) twice when using the <code>zen</code> package written by <em>Chris Wanstrath</em>, co-founder of GitHub, for distraction free writing (which should have been a feature of the stock editor). I haven&rsquo;t been able to pinpoint or reproduce the issue, but I hope it does not persist.</p>
+
+<p>Apart from this, and a couple of hiccups like no inbuilt block selections, I&rsquo;m really liking <strong>Atom</strong> so far.</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/Atom-Love-at-first-sight\/';
+    var disqus_title = 'Atom: Love at first sight';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/Atom-Love-at-first-sight\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Macos on Computable(verse)</title>
+    <link>http://computableverse.com/tags/macos/index.xml</link>
+    <description>Recent content in Macos on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/macos/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Guide to installing stagit on macOS / OSX</title>
+      <link>http://computableverse.com/blog/guide-installing-stagit-macos-osx/</link>
+      <pubDate>Sat, 01 Oct 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/guide-installing-stagit-macos-osx/</guid>
+      <description>&lt;p&gt;Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&amp;rsquo;s easy to use, looks decent, and best of all it&amp;rsquo;s static. So here&amp;rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;First we need to install &lt;code&gt;libgit2&lt;/code&gt; dependency of &lt;code&gt;stagit&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;brew install libgit2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This will install &lt;code&gt;libgit2&lt;/code&gt; in the location: &lt;code&gt;/usr/local/Cellar/libgit2/0.24.1/&lt;/code&gt; (the 0.24.1  version may vary, regardless home-brew will output the location where the library was installed, so take a note of it).&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Clone the stagit repository, since we will be building it on our own.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone git://git.2f30.org/stagit.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now before moving on, you can either choose to build from the latest master commit, or checkout a version before building. If you want to build a version, find all the versions using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git tags -l
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# git checkout tags/&amp;lt;version&amp;gt; 
+# e.g.:
+git checkout tags/0.4
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Now edit the &lt;code&gt;config.mk&lt;/code&gt; file in the directory as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# add /share/ after PREFIX
+MANPREFIX = ${PREFIX}/share/man
+
+...
+
+# set the library path as determined in step 1
+GITINC = /usr/local/Cellar/libgit2/0.24.1/include/
+GITLIB = /usr/local/Cellar/libgit2/0.24.1/lib/
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Go back to command line and run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;make
+make install
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;If all went well, you can now &lt;code&gt;man stagit&lt;/code&gt; and start using it.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

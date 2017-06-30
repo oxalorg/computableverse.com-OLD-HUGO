@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pytest: Sharing fixtures across tests using class level scopes</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='python,testing' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Pytest: Sharing fixtures across tests using class level scopes" />
+<meta property="og:description" content="I&rsquo;ve been using pytest for writing tests because I absolutely love the simple assert systems. Although I&rsquo;d love to write a small article detailing an easy introduction to pytest, I&rsquo;d be digressing from the original title.
+The Problem What exactly is the problem I&rsquo;ll be describing: using pytest to share the same instance of setup and teardown code among multiple tests.
+So instead of
+setup --&gt; test_1 --&gt; teardown setup --&gt; test_2 --&gt; teardown  We want:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/pytest-sharing-class-fixtures/" />
+
+
+<meta property="og:updated_time" content="2017-03-16T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Pytest: Sharing fixtures across tests using class level scopes">
+<meta itemprop="description" content="I&rsquo;ve been using pytest for writing tests because I absolutely love the simple assert systems. Although I&rsquo;d love to write a small article detailing an easy introduction to pytest, I&rsquo;d be digressing from the original title.
+The Problem What exactly is the problem I&rsquo;ll be describing: using pytest to share the same instance of setup and teardown code among multiple tests.
+So instead of
+setup --&gt; test_1 --&gt; teardown setup --&gt; test_2 --&gt; teardown  We want:">
+
+
+<meta itemprop="dateModified" content="2017-03-16T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="543">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Pytest: Sharing fixtures across tests using class level scopes"/>
+<meta name="twitter:description" content="I&rsquo;ve been using pytest for writing tests because I absolutely love the simple assert systems. Although I&rsquo;d love to write a small article detailing an easy introduction to pytest, I&rsquo;d be digressing from the original title.
+The Problem What exactly is the problem I&rsquo;ll be describing: using pytest to share the same instance of setup and teardown code among multiple tests.
+So instead of
+setup --&gt; test_1 --&gt; teardown setup --&gt; test_2 --&gt; teardown  We want:"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Pytest: Sharing fixtures across tests using class level scopes</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2017-03-16T00:00:00Z">March 16, 2017</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/python">python</a>, <a href="http://computableverse.com/tags/testing">testing</a></span>
+    
+</small>
+ </p>
+
+
+
+<p>I&rsquo;ve been using pytest for writing tests because I absolutely
+love the simple assert systems. Although I&rsquo;d love to write a
+small article detailing an easy introduction to pytest, I&rsquo;d be
+digressing from the original title.</p>
+
+<h2 id="the-problem">The Problem</h2>
+
+<p>What exactly is the problem I&rsquo;ll be describing: using pytest
+to share the same instance of setup and teardown code among
+multiple tests.</p>
+
+<p>So instead of</p>
+
+<pre><code>setup --&gt; test_1 --&gt; teardown
+setup --&gt; test_2 --&gt; teardown
+</code></pre>
+
+<p>We want:</p>
+
+<pre><code>setup --&gt; test_1 --&gt; test_2 --&gt; teardown
+</code></pre>
+
+<h2 id="why">Why?</h2>
+
+<p>While testing, there is a need to create an environment for
+the test like a database, or an empty directory.</p>
+
+<p>Example:</p>
+# I'm taking an example of a flask test application
+# In pytest we do this using advanced fixtures
+@pytest.fixtures(scope='function')
+def client():
+    # create a database
+    # at the start of the test
+    db.create_all()
+
+    app_client = app.test_client()
+    app_client.db = db
+    yield app_client
+
+    # remove the database
+    # at the end of the test
+    db.drop_all()
+
+<p>Most of the times we can make-do with a completely fresh
+environment for every test function we write, but at some
+point you&rsquo;ll come across for a need to group multiple tests
+with the same instance of an environment.</p>
+
+<p>Example, let&rsquo;s say we want the user to register, login, and
+check his details all within the same database instance:</p>
+def test_user_register(client):
+    ...
+
+def test_user_login(client):
+    ...
+
+def test_user_details(client):
+    ...
+
+<p>Pytest provides &ldquo;scopes&rdquo; for such groupings. Here pytest will
+run the <code>client</code> fixture for every function separately, since
+it&rsquo;s scoped as a function. That means our database will lose
+the changes made by the register function when it runs the
+login function. To avoid losing these changes, we effectively
+want to <em>share</em> the same fixture instance across these tests.</p>
+
+<h2 id="the-solution">The Solution</h2>
+
+<p>There is an easy way to solve this, we can just extract all
+three tests into it&rsquo;s own module and create a <em>module</em> scoped
+fixture using <code>@pytest.fixtures(scope='module')</code>, everything
+should work as expected. But what if we need to do this across
+several tests which belong to the several user stories?</p>
+
+<p>Pytest documentation mostly highlights three scope levels
+namely: <em>function, module, and session</em> scopes, but there is
+another scope available, which is the <em>class</em> scope.</p>
+
+<p>In a class level scope, we directly inject our environment into
+the class as instance variables, which are then shared among
+all the methods of the class.</p>
+
+<p>First we create a class scoped fixture:</p>
+@pytest.fixture(scope='class')
+def class_client(request):
+    # setup code
+    db = ...
+    db.create_all()
+
+    # inject class variables
+    request.cls.db = db
+    yield
+
+    # teardown code
+    db.drop_all()
+
+<p>Here, as you can see we&rsquo;re adding the database object, which
+needs to be shared among all the class methods, into the class
+of the current function which is run.</p>
+
+<pre><code>request.cls.db = db
+</code></pre>
+
+<p>This is done using the <code>request</code> parameter provided by pytest to
+give the request of the current test function.</p>
+
+<p>To use this fixture on a class, we simply deocarate the class
+as follows:</p>
+@pytest.mark.usefixtures('class_client')
+class TestUserStory:
+    def test_user_register(self):
+        self.db.add(...)
+
+    def test_user_login(self):
+        # changes made in register are persisted
+        # in the database object
+        self.db.query(...)
+
+    def test_user_details(self):
+        ...
+
+<p>Now every function in the class can automatically access
+the injected variables from the fixture as <code>self.variable</code>.</p>
+
+<p>That&rsquo;s about it. I hope the explanation was clear and concise,
+any sort of feedback is appreciated! Thanks.</p>
+
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/pytest-sharing-class-fixtures\/';
+    var disqus_title = 'Pytest: Sharing fixtures across tests using class level scopes';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/pytest-sharing-class-fixtures\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

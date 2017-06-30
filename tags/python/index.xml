@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Python on Computable(verse)</title>
+    <link>http://computableverse.com/tags/python/index.xml</link>
+    <description>Recent content in Python on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/python/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pytest: Sharing fixtures across tests using class level scopes</title>
+      <link>http://computableverse.com/blog/pytest-sharing-class-fixtures/</link>
+      <pubDate>Thu, 16 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/pytest-sharing-class-fixtures/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve been using pytest for writing tests because I absolutely
+love the simple assert systems. Although I&amp;rsquo;d love to write a
+small article detailing an easy introduction to pytest, I&amp;rsquo;d be
+digressing from the original title.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+
+&lt;p&gt;What exactly is the problem I&amp;rsquo;ll be describing: using pytest
+to share the same instance of setup and teardown code among
+multiple tests.&lt;/p&gt;
+
+&lt;p&gt;So instead of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; teardown
+setup --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We want:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;why&#34;&gt;Why?&lt;/h2&gt;
+
+&lt;p&gt;While testing, there is a need to create an environment for
+the test like a database, or an empty directory.&lt;/p&gt;
+
+&lt;p&gt;Example:&lt;/p&gt;
+# I&#39;m taking an example of a flask test application
+# In pytest we do this using advanced fixtures
+@pytest.fixtures(scope=&#39;function&#39;)
+def client():
+    # create a database
+    # at the start of the test
+    db.create_all()
+
+    app_client = app.test_client()
+    app_client.db = db
+    yield app_client
+
+    # remove the database
+    # at the end of the test
+    db.drop_all()
+
+&lt;p&gt;Most of the times we can make-do with a completely fresh
+environment for every test function we write, but at some
+point you&amp;rsquo;ll come across for a need to group multiple tests
+with the same instance of an environment.&lt;/p&gt;
+
+&lt;p&gt;Example, let&amp;rsquo;s say we want the user to register, login, and
+check his details all within the same database instance:&lt;/p&gt;
+def test_user_register(client):
+    ...
+
+def test_user_login(client):
+    ...
+
+def test_user_details(client):
+    ...
+
+&lt;p&gt;Pytest provides &amp;ldquo;scopes&amp;rdquo; for such groupings. Here pytest will
+run the &lt;code&gt;client&lt;/code&gt; fixture for every function separately, since
+it&amp;rsquo;s scoped as a function. That means our database will lose
+the changes made by the register function when it runs the
+login function. To avoid losing these changes, we effectively
+want to &lt;em&gt;share&lt;/em&gt; the same fixture instance across these tests.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-solution&#34;&gt;The Solution&lt;/h2&gt;
+
+&lt;p&gt;There is an easy way to solve this, we can just extract all
+three tests into it&amp;rsquo;s own module and create a &lt;em&gt;module&lt;/em&gt; scoped
+fixture using &lt;code&gt;@pytest.fixtures(scope=&#39;module&#39;)&lt;/code&gt;, everything
+should work as expected. But what if we need to do this across
+several tests which belong to the several user stories?&lt;/p&gt;
+
+&lt;p&gt;Pytest documentation mostly highlights three scope levels
+namely: &lt;em&gt;function, module, and session&lt;/em&gt; scopes, but there is
+another scope available, which is the &lt;em&gt;class&lt;/em&gt; scope.&lt;/p&gt;
+
+&lt;p&gt;In a class level scope, we directly inject our environment into
+the class as instance variables, which are then shared among
+all the methods of the class.&lt;/p&gt;
+
+&lt;p&gt;First we create a class scoped fixture:&lt;/p&gt;
+@pytest.fixture(scope=&#39;class&#39;)
+def class_client(request):
+    # setup code
+    db = ...
+    db.create_all()
+
+    # inject class variables
+    request.cls.db = db
+    yield
+
+    # teardown code
+    db.drop_all()
+
+&lt;p&gt;Here, as you can see we&amp;rsquo;re adding the database object, which
+needs to be shared among all the class methods, into the class
+of the current function which is run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;request.cls.db = db
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is done using the &lt;code&gt;request&lt;/code&gt; parameter provided by pytest to
+give the request of the current test function.&lt;/p&gt;
+
+&lt;p&gt;To use this fixture on a class, we simply deocarate the class
+as follows:&lt;/p&gt;
+@pytest.mark.usefixtures(&#39;class_client&#39;)
+class TestUserStory:
+    def test_user_register(self):
+        self.db.add(...)
+
+    def test_user_login(self):
+        # changes made in register are persisted
+        # in the database object
+        self.db.query(...)
+
+    def test_user_details(self):
+        ...
+
+&lt;p&gt;Now every function in the class can automatically access
+the injected variables from the fixture as &lt;code&gt;self.variable&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s about it. I hope the explanation was clear and concise,
+any sort of feedback is appreciated! Thanks.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Guide to easy publishing and distributing your python application</title>
+      <link>http://computableverse.com/blog/guide-publish-distribute-python-app/</link>
+      <pubDate>Sat, 30 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/guide-publish-distribute-python-app/</guid>
+      <description>&lt;p&gt;Let me be real for a second. It&amp;rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&amp;rsquo;s a breeze. Here&amp;rsquo;s a clean, small, and quick guide explaining just that. No bullshit.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;First &lt;code&gt;cd&lt;/code&gt; into your project folder, preferably with &lt;code&gt;vitrualenv&lt;/code&gt; active. Then create a &lt;code&gt;setup.py&lt;/code&gt; file in the directory similar to this:&lt;/p&gt;
+from setuptools import setup
+from proj import _VERSION
+setup(
+    name=&#39;&lt;proj&gt;&#39;,
+    packages=[&#39;&lt;proj&gt;&#39;],
+    version=_VERSION, 
+    description=&#39;&lt;proj&gt;&#39;,
+    long_description=&#39;Please visit https://github.com/MiteshNinja/&lt;proj&gt; for more details.&#39;,
+    author=&#39;Mitesh Shah&#39;,
+    author_email=&#39;mitesh@miteshshah.com&#39;,
+    url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;&#39;,
+    download_url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;/tarball/&#39; +
+    _VERSION,
+    keywords=[&#39;python&#39;, &#39;proj&#39;],
+    classifiers=[],
+    install_requires=[
+        &#39;package1&#39;, &#39;package2&#39;, &#39;package3&#39;
+    ],
+    entry_points={
+        &#39;console_scripts&#39;: [
+            &#39;proj=proj:main&#39;,
+        ],
+    })
+
+&lt;p&gt;Now install the binary using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;python3 setup.py bdist_wheel
+pip3 install dist/dystic...[TAB to autocomplete]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application will get installed and a &lt;code&gt;dist&lt;/code&gt; and &lt;code&gt;build&lt;/code&gt; directory will be also be created.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;virtualenv&lt;/code&gt; active, make sure the application got installed by either running the command line binary, or running a python interpreter and checking as follows:&lt;/p&gt;
+&gt;&gt;&gt; import dystic
+&gt;&gt;&gt; dystic
+&lt;module &#39;dystic&#39; from &#39;/home/ox/Dropbox/Projects/dystic/venv/lib/python3.5/site-packages/dystic/__init__.py&#39;&gt;
+
+&lt;p&gt;Now inside your &lt;code&gt;proj/__init__.py&lt;/code&gt; file, include a variable as follows:&lt;/p&gt;
+_VERSION = 0.1.0
+
+&lt;p&gt;You only need to change this version and commit whenever making a version change, ofcourse also rebuilding the wheels.&lt;/p&gt;
+
+&lt;p&gt;To distribute the application on &lt;code&gt;pypi&lt;/code&gt;, go to &lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;https://pypi.python.org/pypi&lt;/a&gt; and create an account and create a file &lt;code&gt;~/.pypirc&lt;/code&gt; as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[distutils]
+index-servers=
+    pypi
+    pypitest
+
+[pypitest]
+repository = https://testpypi.python.org/pypi
+username = MiteshNinja
+password = password
+
+[pypi]
+repository = https://pypi.python.org/pypi
+username = MiteshNinja
+password = password
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Note: you can also create an account on pypitest server to test your app beforehand.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Now for uploading you need &lt;code&gt;twine&lt;/code&gt;. Install as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pip3 install twine
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To upload to pypi, simply run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;twine upload dist/&amp;lt;proj&amp;gt;-&amp;lt;version&amp;gt;-py3-none-any.whl
+# or any .whl file created in dist folder
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Voila. That&amp;rsquo;s about it. You can now &lt;code&gt;pip3 install &amp;lt;proj&amp;gt;&lt;/code&gt; from anywhere :)&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Secure flask-admin using flask-basicauth</title>
+      <link>http://computableverse.com/blog/flask-admin-using-basicauth/</link>
+      <pubDate>Thu, 14 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/flask-admin-using-basicauth/</guid>
+      <description>&lt;p&gt;I could not find a way to protect my flask-admin installation at &lt;code&gt;/admin&lt;/code&gt; using &lt;code&gt;Flask-BasicAuth&lt;/code&gt;, so I decided to write this for future explorers!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;The flask-admin docs praise the simplicity and awesomeness of using HTTP basic authentication, and also point the user towards a small extenstion which makes this easy process even easier.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The simplest form of authentication is HTTP Basic Auth. It doesn’t interfere with your database models, and it doesn’t require you to write any new view logic or template code.
+Have a look at Flask-BasicAuth to see just how easy it is to put your whole application behind HTTP Basic Auth.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;and then they drop the bomb saying:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Unfortunately, there is no easy way of applying HTTP Basic Auth just to your admin interface.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Oh well. I definitely do not want people to log in when they land on my index page, so that rules the above option out.&lt;/p&gt;
+
+&lt;p&gt;Thankfully, it&amp;rsquo;s rather quite easy to extend admin views to support &lt;code&gt;flask-BasicAuth&lt;/code&gt;. We just need to override two functions in our admin &lt;code&gt;ModelView&lt;/code&gt; class.&lt;/p&gt;
+class ModelView(sqla.ModelView):
+    def is_accessible(self):
+        if not basic_auth.authenticate():
+            raise AuthException(&#39;Not authenticated.&#39;)
+        else:
+            return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(basic_auth.challenge())
+
+&lt;p&gt;Here &lt;code&gt;basic_auth&lt;/code&gt; is defined as &lt;code&gt;basic_auth = BasicAuth(app)&lt;/code&gt; directly borrowed from the quickstart section of BasicAuth docs.&lt;/p&gt;
+
+&lt;p&gt;If &lt;code&gt;BasicAuth&lt;/code&gt; can&amp;rsquo;t authenticate the user, it will raise an exception which inturn will call the &lt;code&gt;inaccessible_callback&lt;/code&gt; which will challenge the user to provide authentication details.&lt;/p&gt;
+
+&lt;p&gt;The exception, &lt;code&gt;AuthException&lt;/code&gt;, is nothing but a simple &lt;code&gt;HTTPException&lt;/code&gt; provided by &lt;code&gt;werkzeug&lt;/code&gt;:&lt;/p&gt;
+from werkzeug.exceptions import HTTPException
+
+class AuthException(HTTPException):
+    def __init__(self, message):
+        super().__init__(message, Response(
+            &#34;You could not be authenticated. Please refresh the page.&#34;, 401,
+            {&#39;WWW-Authenticate&#39;: &#39;Basic realm=&#34;Login Required&#34;&#39;}
+        ))
+
+&lt;p&gt;Now we can call our admin views normally like this:&lt;/p&gt;
+admin = Admin(app, name=&#39;ninjas-nest&#39;)
+admin.add_view(ModelView(Post, db.session))
+admin.add_view(ModelView(PostFiles, db.session))
+
+&lt;p&gt;TADA! All the urls prefixed with &lt;code&gt;/admin&lt;/code&gt; now require authentication before you can proceed.&lt;/p&gt;
+
+&lt;p&gt;WARNING: Please note that this is not secure on it&amp;rsquo;s own. It will send username and password without any encryption. Only use it with HTTPS (SSL/TLS). Also, this does not block ips which have a lot of failed attempts which could lead to security concerns. I will deal with this in a later post.&lt;/p&gt;
+
+&lt;p&gt;Let me know if you have any better way of protecting only &lt;code&gt;flask-admin&lt;/code&gt; in the comments below.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>NeoVim quick starter guide with python autocomplete.</title>
+      <link>http://computableverse.com/blog/neovim-guide-python/</link>
+      <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/neovim-guide-python/</guid>
+      <description>&lt;p&gt;So there&amp;rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Install neovim (guide &lt;a href=&#34;https://github.com/neovim/neovim/wiki/Installing-Neovim&#34;&gt;here&lt;/a&gt;). On ubuntu it is:&lt;/p&gt;
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+&lt;p&gt;To use the python plugins install neovim python package:&lt;/p&gt;
+sudo pip3 install neovim
+#sudo pip2 install neovim
+
+&lt;p&gt;Setup the NeoVim config files.&lt;/p&gt;
+mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
+mkdir $XDG_CONFIG_HOME/nvim # You can link .vim here, but I&#39;m starting from scratch.
+touch $XDG_CONFIG_HOME/nvim/init.vim
+
+&lt;p&gt;Now we install a plugin manager, &lt;a href=&#34;https://github.com/Shougo/dein.vim&#34;&gt;dein.vim&lt;/a&gt;:&lt;/p&gt;
+cd /tmp &amp;&amp; \
+curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh &gt; installer.sh &amp;&amp;\
+mkdir -p $HOME/.random &amp;&amp;\
+sh ./installer.sh $HOME/.random ||\
+echo &#34;Failed.&#34;
+
+&lt;p&gt;The installer will throw a wall of text and ask you to copy-pasta it in your &lt;code&gt;init.vim&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Now we need to let NeoVim know where our python binaries are located.&lt;/p&gt;
+let g:python_host_prog = &#39;/usr/bin/python&#39;
+let g:python3_host_prog = &#39;/usr/bin/python3&#39;
+
+&lt;p&gt;Uncomment the following lines in your &lt;code&gt;init.vim&lt;/code&gt; file, which installs plugins on startup:&lt;/p&gt;
+if dein#check_install()
+  call dein#install()
+endif
+
+&lt;p&gt;Now to install autocomplete for python. We will use &lt;code&gt;deoplete.nvim&lt;/code&gt; with &lt;code&gt;deoplete-jedi&lt;/code&gt; as source.&lt;/p&gt;
+# First install jedi
+sudo pip3 install jedi
+# Also install yapf for formatting
+sudo pip3 install yapf
+
+&lt;p&gt;Now add these lines to your &lt;code&gt;init.vim&lt;/code&gt;:&lt;/p&gt;
+call dein#add(&#39;Shougo/deoplete.nvim&#39;)
+call deoplete#enable()
+
+autocmd FileType python nnoremap &lt;leader&gt;y :0,$!yapf&lt;Cr&gt;
+autocmd CompleteDone * pclose &#34; To close preview window of deoplete automagically
+
+&lt;p&gt;Feel free to checkout my &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/nvim&#34;&gt;NeoVim config&lt;/a&gt; on github.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Cross domain execution of Python scripts using JS, jQ, AJAX.</title>
+      <link>http://computableverse.com/blog/python-javascript-crossdomain-interaction/</link>
+      <pubDate>Thu, 25 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/python-javascript-crossdomain-interaction/</guid>
+      <description>&lt;p&gt;So I&amp;rsquo;ve been learning python scripting, and I&amp;rsquo;ve been trying to figure out a
+very simple and trivial question.. how do I run my python scripts online?&lt;/p&gt;
+
+&lt;p&gt;Not everyone will have access to a machine with python installed, neither will
+everyone wish to install python just to execute scripts. So I wondered if
+there was a way to run the python script on a server and obviously there is.
+It&amp;rsquo;s also quite easy by using a framework like &amp;lsquo;Flask&amp;rsquo; or &amp;lsquo;Bottle&amp;rsquo; or, if you
+dare, &amp;lsquo;Django&amp;rsquo;. But the problem was that they required my whole site to be
+on the same domain.. but that is not what I had in mind.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;I currently host my personal site &lt;a href=&#34;http://miteshshah.com&#34;&gt;miteshshah.com&lt;/a&gt;
+via GitHub Pages, because it&amp;rsquo;s free and natively supports Jekyll (my static
+blogging platform of choice). I wanted the input to my scripts taken from the
+user/client on this website, which will then be relayed over to my server
+which executes the python script with the respective inputs and relays back
+the result to my page @miteshshah.com/&amp;lt;project&amp;gt;.&lt;/p&gt;
+
+&lt;p&gt;But wait a minute.. I have absolutely no idea about web development? So I
+decided to start with some simple Javascript and read this amazing introduction
+by [MDN](). I then realised I need to learn jQuery, AJAX, JSON, HTML headers,
+and, Python web frameworks. I was overwhelmed by the sheer amount of information
+I was about to soak in the next few days. Instead I just decided to start coding.&lt;/p&gt;
+
+&lt;p&gt;I installed flask &lt;code&gt;sudo python3 install flask&lt;/code&gt; and quickly got a basic web app
+running on localhost.&lt;/p&gt;
+from flask import Flask
+app = Flask(__name__)
+ 
+@app.route(&#34;/&lt;int:x&gt;-&lt;int:y&gt;&#34;)
+def sum(x,y):
+    return (&#34;Sum of x + y = &#34; + str(x+y))
+ 
+if __name__ == &#39;__main__&#39;:
+    app.debug = True
+    app.run(host=&#34;127.0.0.1&#34;, port=8800)
+
+&lt;p&gt;I could then go to &lt;a href=&#34;http://127.0.0.1:8800/2-3&#34;&gt;http://127.0.0.1:&lt;sup&gt;8800&lt;/sup&gt;&amp;frasl;&lt;sub&gt;2&lt;/sub&gt;-3&lt;/a&gt; and
+I would get the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Sum of x + y = 5
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So I got my python script running as a webapp. I know had to find a way to get
+the input for this script from the user. Like I said, I had no clue about web
+development so I started looking at forms. HTML tag &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; was a very quick
+and easy way to take input from the user and I quickly made a sample html file
+with input form for my python script.&lt;/p&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt; test_local &lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;p&gt; Sum of two numbers:  &lt;/p&gt;
+        &lt;form&gt;
+            Number 1 : &lt;input type=&#34;text&#34; name=&#34;n1&#34;&gt;
+            number 2 : &lt;input type=&#34;text&#34; name=&#34;n2&#34;&gt;
+            &lt;input type=&#34;button&#34; value=&#34;Click&#34; onClick=&#34;&#34;&gt;
+        &lt;/form&gt;
+        &lt;div class=&#34;result&#34;&gt;
+        &lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+
+&lt;p&gt;So now I could take input from the user. I somehow had to feed this input into my python script. I first tried doing it via pure javascript alone. A little bit of searching convinced me to instead use AJAX + jQuery.&lt;/p&gt;
+
+&lt;p&gt;I came up with the following solution:&lt;/p&gt;
+function testFunc (form) {
+    var x = form.n1.value;
+    var y = form.n2.value;
+ 
+    $.ajax({
+        type: &#39;GET&#39;,            
+        slug: .0.0.1:5000/&#34;+x+&#34;-&#34;+y,
+        contentType: &#39;text/plain&#39;,
+        success: function(response, textStat){
+            response = &#34;The total sum is&#34; + response;
+                $(&#39;.result&#39;).html(response);    
+            }
+    });
+}
+
+&lt;p&gt;This would take the answer from my python script and insert it inside the div tag with class &amp;ldquo;.result&amp;rdquo;, atleast it would in theory.&lt;/p&gt;
+
+&lt;p&gt;Having absolutely no knowledge about JS, jQuery or AJAX. It was hard for me to debug my own code.&lt;/p&gt;
+
+&lt;p&gt;There was a particular error which took me quite some time to figure out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;XMLHttpRequest cannot load http://127.0.0.1:8800/2-3. No &#39;Access-Control-Allow-Origin&#39; header is present on the requested resource. Origin &#39;null&#39; is therefore not allowed access.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is when I learned that my sample site was not authorised to transfer/relay data on another server/host. I fixed this by including a header to the respone in my python app.&lt;/p&gt;
+@app.route(&#34;/&lt;int:x&gt;-&lt;int:y&gt;&#34;)
+def sum(x, y):
+  resp = make_response(str(x + y))
+  resp.headers[&#39;Access-Control-Allow-Origin&#39;] = &#39;*&#39;
+  return resp
+
+&lt;p&gt;I included some more CORS code in jQuery/ajax function, but I don&amp;rsquo;t quite understand it completely.&lt;/p&gt;
+
+&lt;p&gt;The final result can be seen here: &lt;a href=&#34;http://miteshshah.com/sample&#34;&gt;http://miteshshah.com/sample&lt;/a&gt;.  [EDIT: I&amp;rsquo;ve taken this down, but you should still try this on your own. It works :P]&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

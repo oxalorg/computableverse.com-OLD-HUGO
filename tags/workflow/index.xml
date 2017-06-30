@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Workflow on Computable(verse)</title>
+    <link>http://computableverse.com/tags/workflow/index.xml</link>
+    <description>Recent content in Workflow on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/workflow/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My terminal setup 2016</title>
+      <link>http://computableverse.com/blog/my-terminal-setup/</link>
+      <pubDate>Mon, 25 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/my-terminal-setup/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s a pain to remember and reconfigure my keyboard junkie setup every time I change systems, or re-install the OS.&lt;/p&gt;
+
+&lt;p&gt;So I&amp;rsquo;m writing my process down to make it easier to bootstrap and remember.&lt;/p&gt;
+
+&lt;p&gt;You can find my &lt;code&gt;~/dotfiles&lt;/code&gt; repository &lt;a href=&#34;https://github.com/miteshninja/dotfiles&#34; title=&#34;dotfiles.git&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;screenshot&#34;&gt;Screenshot:&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://computableverse.com/assets/images/terminal-01.png&#34;&gt;&lt;img src=&#34;http://computableverse.com/assets/images/terminal-01.png&#34; alt=&#34;screenshot-terminal&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;shell&#34;&gt;Shell&lt;/h3&gt;
+
+&lt;p&gt;My shell of choice is &amp;lsquo;zsh&amp;rsquo;.&lt;/p&gt;
+sudo apt-get install zsh
+chsh -s $(which zsh)
+
+&lt;p&gt;I avoid using frameworks for zsh since most of them are bloated, i.e. contain a lot of excessive functions and options.&lt;/p&gt;
+
+&lt;p&gt;I have a custom &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/zsh&#34; title=&#34;dotfiles/zsh&#34;&gt;zsh cofiguration&lt;/a&gt; picked and parceled from several sources, and I use &lt;a href=&#34;https://github.com/tarjoilija/zgen&#34;&gt;zgen&lt;/a&gt; plugin manager for minimal overhead.&lt;/p&gt;
+
+&lt;p&gt;zgen being extremely easy to install and setup, the whole process of configuring my &lt;em&gt;zsh&lt;/em&gt; can be automated using &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/blob/master/zsh/setup.sh&#34;&gt;this&lt;/a&gt; script:&lt;/p&gt;
+if [ -e ~/.zshrc -o -L ~/.zshrc ]; then
+        echo &#34;Backing up existing .zshrc.&#34;
+        mv ~/.zshrc ~/.zshrc.$(date +%F-%R).bak
+fi
+
+if [ -d ~/.config/zsh -o -L ~/.config/zsh ]; then
+        echo &#34;Backing up zsh folder&#34;
+        mv ~/.config/zsh ~/.config/zsh.$(date +%F-%R).bak
+fi
+
+echo &#34;Soft linking zsh to ~/.config/zsh&#34;
+ln --symbolic -v ${DOTFILESDIR}/zsh ${HOME}/.config/
+
+echo &#34;Soft linking .zshrc to ~/.zshrc&#34;
+ln --symbolic -v ${HOME}/.config/zsh/.zshrc ${HOME}/
+
+if ! [ -e ~/zgen/zgen.zsh -o -L ~/zgen/zgen.zsh ]; then
+	cd ~
+	git clone https://github.com/tarjoilija/zgen
+fi
+
+echo &#34;Now run &#39;source ~/.zshrc&#39; to activate your settings.&#34;
+
+&lt;h3 id=&#34;terminal&#34;&gt;Terminal&lt;/h3&gt;
+
+&lt;p&gt;I use 2 different terminal emulators to suit my needs.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.pleyades.net/david/projects/sakura&#34;&gt;&amp;lsquo;Sakura&amp;rsquo;&lt;/a&gt; is a lightweight, yet configurable terminal emulator with Gtk dependencies.
+I downloaded and set it as my default terminal using:&lt;/p&gt;
+sudo apt-get install sakura
+sudo update-alternatives --config x-terminal-emulator
+gsettings set org.gnome.desktop.default-applications.terminal exec &#39;sakura&#39;
+# if this doesn&#39;t work, run this too
+# gsettings set org.gnome.desktop.default-applications.terminal exec-arg &#34;&#34;
+
+&lt;p&gt;I also installed and set up Guake to have a quick drop down terminal to handle quick one time commands and sometimes the music player.&lt;/p&gt;
+
+&lt;h4 id=&#34;tmux&#34;&gt;Tmux&lt;/h4&gt;
+
+&lt;p&gt;In the above 2 terminal emulators, I almost always have a &lt;a href=&#34;https://tmux.github.io/&#34;&gt;tmux&lt;/a&gt; (terminal-multiplexer) session open. Having the freedom to create and arrange multiple panes and windows is extremely useful.&lt;/p&gt;
+
+&lt;p&gt;I have a simple &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/tmux&#34; title=&#34;dotfiles/tmux&#34;&gt;configuration&lt;/a&gt; present over in my dotfiles repo and actvating it is as simple as linking &lt;code&gt;.tmux.conf&lt;/code&gt; to the &lt;code&gt;~/&lt;/code&gt; $HOME directory.&lt;/p&gt;
+
+&lt;h3 id=&#34;gymnasticz&#34;&gt;GymnasticZ&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m currently using 2 tools for some handy shell gymnastics.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/rupa/z&#34;&gt;&amp;lsquo;z&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This handy tool keeps tracks of your &amp;lsquo;frecency (frequently+recently) used directories and helps you jump around.&lt;/p&gt;
+
+&lt;p&gt;There are many tools available which provide such functionality, like &amp;lsquo;autojmp&amp;rsquo;, &amp;lsquo;v&amp;rsquo;, &amp;lsquo;fasd&amp;rsquo; etc. But I found &amp;lsquo;z&amp;rsquo; to be straight to the point and easy to install. I am currently reading the autojmp source and might try it out later (python ftw!).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/junegunn/fzf/&#34;&gt;&amp;lsquo;fzf&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This one is pretty handy. It&amp;rsquo;s a command line fuzzyfinder tool. It&amp;rsquo;s fast, easy to pipe into, and super easy to setup. It supports fuzzy completion for bash/zsh shell and thus can work with any command  which is pretty handy imo. The reverse fuzzy search and integration with vim is a huge plus.&lt;/p&gt;
+
+&lt;p&gt;Apart from these, I keep expanding my toolset as and when necessary. I haven&amp;rsquo;t talked about &lt;code&gt;vim&lt;/code&gt; or &lt;code&gt;zsh&lt;/code&gt; configuration in details because that&amp;rsquo;s another story for another time!&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Atom: Love at first sight</title>
+      <link>http://computableverse.com/blog/Atom-Love-at-first-sight/</link>
+      <pubDate>Sat, 09 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/Atom-Love-at-first-sight/</guid>
+      <description>&lt;p&gt;I&amp;rsquo;ve had a love/hate relation with VIM and Sublime over the past few months. I love the concept of flow-based editing i.e vim-fu, but I also love the ease and beauty of sublime text.&lt;/p&gt;
+
+&lt;p&gt;I was tired of switching between the two and figuring out which is better. So I did something &lt;em&gt;unexpected&lt;/em&gt;. I installed &lt;a href=&#34;https://atom.io&#34;&gt;Atom&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;I had tried Atom back in the beta days, and frankly it did not leave a remarkable experience on me. It was slow and clunky, which is why I decided to stick to the &lt;em&gt;top guns&lt;/em&gt; of the time.&lt;/p&gt;
+
+&lt;p&gt;I got Atom v1.3.0 installed on by ubuntu-box and fired it up.&lt;/p&gt;
+sudo add-apt-repository ppa:webupd8team/atom
+sudo apt-get update
+sudo apt-get install atom
+
+&lt;h3 id=&#34;first-looks&#34;&gt;First looks&lt;/h3&gt;
+
+&lt;p&gt;Damn was it beautiful. I knew it that very second, on the &amp;lsquo;Welcome&amp;rsquo; screen, that &lt;strong&gt;this&lt;/strong&gt; is what I&amp;rsquo;m going to be using from now.&lt;/p&gt;
+
+&lt;p&gt;A lot of people argue that aesthetics aren&amp;rsquo;t relevant for a text-editor, after all we do use mono-spaced fonts, and I&amp;rsquo;ve seen countless posts and discussions, usually started by vim/emac fans, revolving around this very fact. But I beg to differ. I stare &lt;em&gt;directly&lt;/em&gt; into an editor for the better part of my day, it makes a huge difference if it is aesthetically pleasing or not.&lt;/p&gt;
+
+&lt;p&gt;That doesn&amp;rsquo;t mean aesthetics &amp;gt; functionality, and that is one of the reasons I don&amp;rsquo;t hate command line embedded editors.&lt;/p&gt;
+
+&lt;h3 id=&#34;beautifying-it-further&#34;&gt;Beautifying it further.&lt;/h3&gt;
+
+&lt;p&gt;With more than 10 built in themes and syntax options, you really don&amp;rsquo;t need to do any more &amp;lsquo;manual&amp;rsquo; customization.&lt;/p&gt;
+
+&lt;p&gt;But that&amp;rsquo;s not going to happen. So here we go.&lt;/p&gt;
+
+&lt;p&gt;A built in package manager is a warm welcome with intuitive and easy ways to customize and install packages, as easy as &lt;code&gt;apm install atom-beautify&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;A quick look over the top packages on their &lt;a href=&#34;https://atom.io/packages/list&#34;&gt;package control site&lt;/a&gt;, gave plenty of amazing packages which could be installed in less than a minute.&lt;/p&gt;
+
+&lt;p&gt;I decided to install these:&lt;/p&gt;
+$ sort apm-packages
+
+atom-beautify
+atom-terminal
+autoclose-html
+autocomplete-paths
+autocomplete-python
+file-icons
+fonts
+git-log
+git-plus
+highlight-selected
+linter
+linter-flake8
+merge-conflicts
+sublime-style-column-selection
+vim-mode
+zen
+
+$ cat apm-packages | xargs apm install
+
+&lt;p&gt;I&amp;rsquo;d advise you against installing all those &lt;em&gt;before&lt;/em&gt; reading what they do. You can however open their respective package pages using this simple command:&lt;/p&gt;
+awk &#39;{print &#34;https://atom.io/packages/&#34;$1}&#39; apm-packages | xargs google-chrome
+
+&lt;p&gt;Changed my font to &lt;strong&gt;Inconsolata-G&lt;/strong&gt; (my current code favourite) using the &lt;code&gt;fonts&lt;/code&gt; package and I was ready to go.&lt;/p&gt;
+
+&lt;h3 id=&#34;with-3-by-github&#34;&gt;&amp;lt; &amp;gt; with &amp;lt;3 by GitHub&lt;/h3&gt;
+
+&lt;p&gt;One would think that a text editor made by GitHub would have excellent Git integration. I wish that were true.&lt;/p&gt;
+
+&lt;p&gt;Yes, they have amazing gutter git-diff colors and several other options like viewing a list of new/modified files since the last commit. Also shows the number of insertion/deletions, branch etc in the status bar.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code&gt;git-plus&lt;/code&gt; package adds a lot of functionality like &lt;em&gt;add, push, pull, commit, unstage etc..&lt;/em&gt; which should have been provided in the base installation by atom. The package itself lacks polish and is rather unintuitive to use.&lt;/p&gt;
+
+&lt;p&gt;I constantly found myself switching back to the terminal to interface with Git (&lt;code&gt;atom-terminal&lt;/code&gt; makes this extremely easy).&lt;/p&gt;
+
+&lt;p&gt;Also, GitHub has been strongly in support of Markdown yet I find almost non-existant markdown based features available, except for backtick on-the-fly syntax highlighting and live preview.&lt;/p&gt;
+
+&lt;p&gt;It has also managed to freeze my complete OS (Ubuntu 14.04) twice when using the &lt;code&gt;zen&lt;/code&gt; package written by &lt;em&gt;Chris Wanstrath&lt;/em&gt;, co-founder of GitHub, for distraction free writing (which should have been a feature of the stock editor). I haven&amp;rsquo;t been able to pinpoint or reproduce the issue, but I hope it does not persist.&lt;/p&gt;
+
+&lt;p&gt;Apart from this, and a couple of hiccups like no inbuilt block selections, I&amp;rsquo;m really liking &lt;strong&gt;Atom&lt;/strong&gt; so far.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

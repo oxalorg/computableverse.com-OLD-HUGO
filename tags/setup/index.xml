@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Setup on Computable(verse)</title>
+    <link>http://computableverse.com/tags/setup/index.xml</link>
+    <description>Recent content in Setup on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/setup/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>My terminal setup 2016</title>
+      <link>http://computableverse.com/blog/my-terminal-setup/</link>
+      <pubDate>Mon, 25 Jan 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/my-terminal-setup/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s a pain to remember and reconfigure my keyboard junkie setup every time I change systems, or re-install the OS.&lt;/p&gt;
+
+&lt;p&gt;So I&amp;rsquo;m writing my process down to make it easier to bootstrap and remember.&lt;/p&gt;
+
+&lt;p&gt;You can find my &lt;code&gt;~/dotfiles&lt;/code&gt; repository &lt;a href=&#34;https://github.com/miteshninja/dotfiles&#34; title=&#34;dotfiles.git&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;screenshot&#34;&gt;Screenshot:&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://computableverse.com/assets/images/terminal-01.png&#34;&gt;&lt;img src=&#34;http://computableverse.com/assets/images/terminal-01.png&#34; alt=&#34;screenshot-terminal&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;shell&#34;&gt;Shell&lt;/h3&gt;
+
+&lt;p&gt;My shell of choice is &amp;lsquo;zsh&amp;rsquo;.&lt;/p&gt;
+sudo apt-get install zsh
+chsh -s $(which zsh)
+
+&lt;p&gt;I avoid using frameworks for zsh since most of them are bloated, i.e. contain a lot of excessive functions and options.&lt;/p&gt;
+
+&lt;p&gt;I have a custom &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/zsh&#34; title=&#34;dotfiles/zsh&#34;&gt;zsh cofiguration&lt;/a&gt; picked and parceled from several sources, and I use &lt;a href=&#34;https://github.com/tarjoilija/zgen&#34;&gt;zgen&lt;/a&gt; plugin manager for minimal overhead.&lt;/p&gt;
+
+&lt;p&gt;zgen being extremely easy to install and setup, the whole process of configuring my &lt;em&gt;zsh&lt;/em&gt; can be automated using &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/blob/master/zsh/setup.sh&#34;&gt;this&lt;/a&gt; script:&lt;/p&gt;
+if [ -e ~/.zshrc -o -L ~/.zshrc ]; then
+        echo &#34;Backing up existing .zshrc.&#34;
+        mv ~/.zshrc ~/.zshrc.$(date +%F-%R).bak
+fi
+
+if [ -d ~/.config/zsh -o -L ~/.config/zsh ]; then
+        echo &#34;Backing up zsh folder&#34;
+        mv ~/.config/zsh ~/.config/zsh.$(date +%F-%R).bak
+fi
+
+echo &#34;Soft linking zsh to ~/.config/zsh&#34;
+ln --symbolic -v ${DOTFILESDIR}/zsh ${HOME}/.config/
+
+echo &#34;Soft linking .zshrc to ~/.zshrc&#34;
+ln --symbolic -v ${HOME}/.config/zsh/.zshrc ${HOME}/
+
+if ! [ -e ~/zgen/zgen.zsh -o -L ~/zgen/zgen.zsh ]; then
+	cd ~
+	git clone https://github.com/tarjoilija/zgen
+fi
+
+echo &#34;Now run &#39;source ~/.zshrc&#39; to activate your settings.&#34;
+
+&lt;h3 id=&#34;terminal&#34;&gt;Terminal&lt;/h3&gt;
+
+&lt;p&gt;I use 2 different terminal emulators to suit my needs.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://www.pleyades.net/david/projects/sakura&#34;&gt;&amp;lsquo;Sakura&amp;rsquo;&lt;/a&gt; is a lightweight, yet configurable terminal emulator with Gtk dependencies.
+I downloaded and set it as my default terminal using:&lt;/p&gt;
+sudo apt-get install sakura
+sudo update-alternatives --config x-terminal-emulator
+gsettings set org.gnome.desktop.default-applications.terminal exec &#39;sakura&#39;
+# if this doesn&#39;t work, run this too
+# gsettings set org.gnome.desktop.default-applications.terminal exec-arg &#34;&#34;
+
+&lt;p&gt;I also installed and set up Guake to have a quick drop down terminal to handle quick one time commands and sometimes the music player.&lt;/p&gt;
+
+&lt;h4 id=&#34;tmux&#34;&gt;Tmux&lt;/h4&gt;
+
+&lt;p&gt;In the above 2 terminal emulators, I almost always have a &lt;a href=&#34;https://tmux.github.io/&#34;&gt;tmux&lt;/a&gt; (terminal-multiplexer) session open. Having the freedom to create and arrange multiple panes and windows is extremely useful.&lt;/p&gt;
+
+&lt;p&gt;I have a simple &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/tmux&#34; title=&#34;dotfiles/tmux&#34;&gt;configuration&lt;/a&gt; present over in my dotfiles repo and actvating it is as simple as linking &lt;code&gt;.tmux.conf&lt;/code&gt; to the &lt;code&gt;~/&lt;/code&gt; $HOME directory.&lt;/p&gt;
+
+&lt;h3 id=&#34;gymnasticz&#34;&gt;GymnasticZ&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m currently using 2 tools for some handy shell gymnastics.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/rupa/z&#34;&gt;&amp;lsquo;z&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This handy tool keeps tracks of your &amp;lsquo;frecency (frequently+recently) used directories and helps you jump around.&lt;/p&gt;
+
+&lt;p&gt;There are many tools available which provide such functionality, like &amp;lsquo;autojmp&amp;rsquo;, &amp;lsquo;v&amp;rsquo;, &amp;lsquo;fasd&amp;rsquo; etc. But I found &amp;lsquo;z&amp;rsquo; to be straight to the point and easy to install. I am currently reading the autojmp source and might try it out later (python ftw!).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://github.com/junegunn/fzf/&#34;&gt;&amp;lsquo;fzf&amp;rsquo;&lt;/a&gt;&lt;/strong&gt;: This one is pretty handy. It&amp;rsquo;s a command line fuzzyfinder tool. It&amp;rsquo;s fast, easy to pipe into, and super easy to setup. It supports fuzzy completion for bash/zsh shell and thus can work with any command  which is pretty handy imo. The reverse fuzzy search and integration with vim is a huge plus.&lt;/p&gt;
+
+&lt;p&gt;Apart from these, I keep expanding my toolset as and when necessary. I haven&amp;rsquo;t talked about &lt;code&gt;vim&lt;/code&gt; or &lt;code&gt;zsh&lt;/code&gt; configuration in details because that&amp;rsquo;s another story for another time!&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

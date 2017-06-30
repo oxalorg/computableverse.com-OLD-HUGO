@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pypi on Computable(verse)</title>
+    <link>http://computableverse.com/tags/pypi/index.xml</link>
+    <description>Recent content in Pypi on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/pypi/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Guide to easy publishing and distributing your python application</title>
+      <link>http://computableverse.com/blog/guide-publish-distribute-python-app/</link>
+      <pubDate>Sat, 30 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/guide-publish-distribute-python-app/</guid>
+      <description>&lt;p&gt;Let me be real for a second. It&amp;rsquo;s a goddamn pain to get your python app distributed easily, unless you already know how to. Then it&amp;rsquo;s a breeze. Here&amp;rsquo;s a clean, small, and quick guide explaining just that. No bullshit.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;First &lt;code&gt;cd&lt;/code&gt; into your project folder, preferably with &lt;code&gt;vitrualenv&lt;/code&gt; active. Then create a &lt;code&gt;setup.py&lt;/code&gt; file in the directory similar to this:&lt;/p&gt;
+from setuptools import setup
+from proj import _VERSION
+setup(
+    name=&#39;&lt;proj&gt;&#39;,
+    packages=[&#39;&lt;proj&gt;&#39;],
+    version=_VERSION, 
+    description=&#39;&lt;proj&gt;&#39;,
+    long_description=&#39;Please visit https://github.com/MiteshNinja/&lt;proj&gt; for more details.&#39;,
+    author=&#39;Mitesh Shah&#39;,
+    author_email=&#39;mitesh@miteshshah.com&#39;,
+    url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;&#39;,
+    download_url=&#39;https://github.com/MiteshNinja/&lt;proj&gt;/tarball/&#39; +
+    _VERSION,
+    keywords=[&#39;python&#39;, &#39;proj&#39;],
+    classifiers=[],
+    install_requires=[
+        &#39;package1&#39;, &#39;package2&#39;, &#39;package3&#39;
+    ],
+    entry_points={
+        &#39;console_scripts&#39;: [
+            &#39;proj=proj:main&#39;,
+        ],
+    })
+
+&lt;p&gt;Now install the binary using:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;python3 setup.py bdist_wheel
+pip3 install dist/dystic...[TAB to autocomplete]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application will get installed and a &lt;code&gt;dist&lt;/code&gt; and &lt;code&gt;build&lt;/code&gt; directory will be also be created.&lt;/p&gt;
+
+&lt;p&gt;With the &lt;code&gt;virtualenv&lt;/code&gt; active, make sure the application got installed by either running the command line binary, or running a python interpreter and checking as follows:&lt;/p&gt;
+&gt;&gt;&gt; import dystic
+&gt;&gt;&gt; dystic
+&lt;module &#39;dystic&#39; from &#39;/home/ox/Dropbox/Projects/dystic/venv/lib/python3.5/site-packages/dystic/__init__.py&#39;&gt;
+
+&lt;p&gt;Now inside your &lt;code&gt;proj/__init__.py&lt;/code&gt; file, include a variable as follows:&lt;/p&gt;
+_VERSION = 0.1.0
+
+&lt;p&gt;You only need to change this version and commit whenever making a version change, ofcourse also rebuilding the wheels.&lt;/p&gt;
+
+&lt;p&gt;To distribute the application on &lt;code&gt;pypi&lt;/code&gt;, go to &lt;a href=&#34;https://pypi.python.org/pypi&#34;&gt;https://pypi.python.org/pypi&lt;/a&gt; and create an account and create a file &lt;code&gt;~/.pypirc&lt;/code&gt; as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[distutils]
+index-servers=
+    pypi
+    pypitest
+
+[pypitest]
+repository = https://testpypi.python.org/pypi
+username = MiteshNinja
+password = password
+
+[pypi]
+repository = https://pypi.python.org/pypi
+username = MiteshNinja
+password = password
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;em&gt;Note: you can also create an account on pypitest server to test your app beforehand.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Now for uploading you need &lt;code&gt;twine&lt;/code&gt;. Install as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pip3 install twine
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To upload to pypi, simply run:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;twine upload dist/&amp;lt;proj&amp;gt;-&amp;lt;version&amp;gt;-py3-none-any.whl
+# or any .whl file created in dist folder
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Voila. That&amp;rsquo;s about it. You can now &lt;code&gt;pip3 install &amp;lt;proj&amp;gt;&lt;/code&gt; from anywhere :)&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

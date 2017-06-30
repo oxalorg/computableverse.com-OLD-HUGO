@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Autoindex with try_files in nginx</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='nginx' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Autoindex with try_files in nginx" />
+<meta property="og:description" content="It&rsquo;s a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let&rsquo;s change that and understand
+the proper way to implement nginx with both try_files
+directive and automatic directory index using autoindex on
+with a working 404 page on incorrect urls.
+
+Let&rsquo;s say we have a particular location block in which we want
+these features to co-exist. What we need is something like this:
+
+
+Match uri exactly
+Show index.html if it is present
+Show {uri}.html if it is present
+Show an automated directory if folder exists
+Otherwise show a 404 error
+
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/nginx-autoindex-try-files/" />
+
+
+<meta property="og:updated_time" content="2017-01-26T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Autoindex with try_files in nginx">
+<meta itemprop="description" content="It&rsquo;s a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let&rsquo;s change that and understand
+the proper way to implement nginx with both try_files
+directive and automatic directory index using autoindex on
+with a working 404 page on incorrect urls.
+
+Let&rsquo;s say we have a particular location block in which we want
+these features to co-exist. What we need is something like this:
+
+
+Match uri exactly
+Show index.html if it is present
+Show {uri}.html if it is present
+Show an automated directory if folder exists
+Otherwise show a 404 error
+
+
+">
+
+
+<meta itemprop="dateModified" content="2017-01-26T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="176">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Autoindex with try_files in nginx"/>
+<meta name="twitter:description" content="It&rsquo;s a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let&rsquo;s change that and understand
+the proper way to implement nginx with both try_files
+directive and automatic directory index using autoindex on
+with a working 404 page on incorrect urls.
+
+Let&rsquo;s say we have a particular location block in which we want
+these features to co-exist. What we need is something like this:
+
+
+Match uri exactly
+Show index.html if it is present
+Show {uri}.html if it is present
+Show an automated directory if folder exists
+Otherwise show a 404 error
+
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Autoindex with try_files in nginx</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2017-01-26T00:00:00Z">January 26, 2017</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/nginx">nginx</a></span>
+    
+</small>
+ </p>
+
+<p>It&rsquo;s a bit nitpicky but after setting up a couple of websites,
+I always run across this issue and have to randomly guess and
+try until I get it right. So let&rsquo;s change that and understand
+the proper way to implement nginx with both <code>try_files</code>
+directive and automatic directory index using <code>autoindex on</code>
+with a working 404 page on incorrect urls.</p>
+
+<p>Let&rsquo;s say we have a particular location block in which we want
+these features to co-exist. What we need is something like this:</p>
+
+<ol>
+<li>Match uri exactly</li>
+<li>Show <code>index.html</code> if it is present</li>
+<li>Show <code>{uri}.html</code> if it is present</li>
+<li>Show an automated directory if folder exists</li>
+<li>Otherwise show a 404 error</li>
+</ol>
+
+<p></p>
+
+<p>2nd point is implemented using an inbuilt nginx directive:</p>
+
+<pre><code>index index.html
+</code></pre>
+
+<p>Rest of the scenarios are implemented using:</p>
+
+<pre><code>try_files $uri $uri.html $uri/ =404;
+autoindex on;
+</code></pre>
+
+<p>These are checked in order until one of the condition satisfies.</p>
+
+<p>Entire config:</p>
+
+<pre><code>server {
+    listen 80;
+    server_name rogue.oxal.org;
+    server_tokens off;
+    root /var/www/rogue.oxal.org/public;
+    index index.html;
+
+    location / {
+        autoindex on;
+        try_files $uri $uri.html $uri/ =404;
+    }
+
+    error_page 404 /404.html;
+}
+</code></pre>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/nginx-autoindex-try-files\/';
+    var disqus_title = 'Autoindex with try_files in nginx';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/nginx-autoindex-try-files\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

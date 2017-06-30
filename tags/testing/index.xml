@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Testing on Computable(verse)</title>
+    <link>http://computableverse.com/tags/testing/index.xml</link>
+    <description>Recent content in Testing on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/testing/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pytest: Sharing fixtures across tests using class level scopes</title>
+      <link>http://computableverse.com/blog/pytest-sharing-class-fixtures/</link>
+      <pubDate>Thu, 16 Mar 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/pytest-sharing-class-fixtures/</guid>
+      <description>
+
+&lt;p&gt;I&amp;rsquo;ve been using pytest for writing tests because I absolutely
+love the simple assert systems. Although I&amp;rsquo;d love to write a
+small article detailing an easy introduction to pytest, I&amp;rsquo;d be
+digressing from the original title.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-problem&#34;&gt;The Problem&lt;/h2&gt;
+
+&lt;p&gt;What exactly is the problem I&amp;rsquo;ll be describing: using pytest
+to share the same instance of setup and teardown code among
+multiple tests.&lt;/p&gt;
+
+&lt;p&gt;So instead of&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; teardown
+setup --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We want:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;setup --&amp;gt; test_1 --&amp;gt; test_2 --&amp;gt; teardown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;why&#34;&gt;Why?&lt;/h2&gt;
+
+&lt;p&gt;While testing, there is a need to create an environment for
+the test like a database, or an empty directory.&lt;/p&gt;
+
+&lt;p&gt;Example:&lt;/p&gt;
+# I&#39;m taking an example of a flask test application
+# In pytest we do this using advanced fixtures
+@pytest.fixtures(scope=&#39;function&#39;)
+def client():
+    # create a database
+    # at the start of the test
+    db.create_all()
+
+    app_client = app.test_client()
+    app_client.db = db
+    yield app_client
+
+    # remove the database
+    # at the end of the test
+    db.drop_all()
+
+&lt;p&gt;Most of the times we can make-do with a completely fresh
+environment for every test function we write, but at some
+point you&amp;rsquo;ll come across for a need to group multiple tests
+with the same instance of an environment.&lt;/p&gt;
+
+&lt;p&gt;Example, let&amp;rsquo;s say we want the user to register, login, and
+check his details all within the same database instance:&lt;/p&gt;
+def test_user_register(client):
+    ...
+
+def test_user_login(client):
+    ...
+
+def test_user_details(client):
+    ...
+
+&lt;p&gt;Pytest provides &amp;ldquo;scopes&amp;rdquo; for such groupings. Here pytest will
+run the &lt;code&gt;client&lt;/code&gt; fixture for every function separately, since
+it&amp;rsquo;s scoped as a function. That means our database will lose
+the changes made by the register function when it runs the
+login function. To avoid losing these changes, we effectively
+want to &lt;em&gt;share&lt;/em&gt; the same fixture instance across these tests.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-solution&#34;&gt;The Solution&lt;/h2&gt;
+
+&lt;p&gt;There is an easy way to solve this, we can just extract all
+three tests into it&amp;rsquo;s own module and create a &lt;em&gt;module&lt;/em&gt; scoped
+fixture using &lt;code&gt;@pytest.fixtures(scope=&#39;module&#39;)&lt;/code&gt;, everything
+should work as expected. But what if we need to do this across
+several tests which belong to the several user stories?&lt;/p&gt;
+
+&lt;p&gt;Pytest documentation mostly highlights three scope levels
+namely: &lt;em&gt;function, module, and session&lt;/em&gt; scopes, but there is
+another scope available, which is the &lt;em&gt;class&lt;/em&gt; scope.&lt;/p&gt;
+
+&lt;p&gt;In a class level scope, we directly inject our environment into
+the class as instance variables, which are then shared among
+all the methods of the class.&lt;/p&gt;
+
+&lt;p&gt;First we create a class scoped fixture:&lt;/p&gt;
+@pytest.fixture(scope=&#39;class&#39;)
+def class_client(request):
+    # setup code
+    db = ...
+    db.create_all()
+
+    # inject class variables
+    request.cls.db = db
+    yield
+
+    # teardown code
+    db.drop_all()
+
+&lt;p&gt;Here, as you can see we&amp;rsquo;re adding the database object, which
+needs to be shared among all the class methods, into the class
+of the current function which is run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;request.cls.db = db
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is done using the &lt;code&gt;request&lt;/code&gt; parameter provided by pytest to
+give the request of the current test function.&lt;/p&gt;
+
+&lt;p&gt;To use this fixture on a class, we simply deocarate the class
+as follows:&lt;/p&gt;
+@pytest.mark.usefixtures(&#39;class_client&#39;)
+class TestUserStory:
+    def test_user_register(self):
+        self.db.add(...)
+
+    def test_user_login(self):
+        # changes made in register are persisted
+        # in the database object
+        self.db.query(...)
+
+    def test_user_details(self):
+        ...
+
+&lt;p&gt;Now every function in the class can automatically access
+the injected variables from the fixture as &lt;code&gt;self.variable&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s about it. I hope the explanation was clear and concise,
+any sort of feedback is appreciated! Thanks.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

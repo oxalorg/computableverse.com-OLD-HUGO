@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Neovim on Computable(verse)</title>
+    <link>http://computableverse.com/tags/neovim/index.xml</link>
+    <description>Recent content in Neovim on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/neovim/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>NeoVim quick starter guide with python autocomplete.</title>
+      <link>http://computableverse.com/blog/neovim-guide-python/</link>
+      <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/neovim-guide-python/</guid>
+      <description>&lt;p&gt;So there&amp;rsquo;s no simple guide available online which just gets me running really quickly. Most of them are either too detailed, or too obscure. So I decided to post my own.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;Install neovim (guide &lt;a href=&#34;https://github.com/neovim/neovim/wiki/Installing-Neovim&#34;&gt;here&lt;/a&gt;). On ubuntu it is:&lt;/p&gt;
+sudo add-apt-repository ppa:neovim-ppa/unstable
+sudo apt-get update
+sudo apt-get install neovim
+
+&lt;p&gt;To use the python plugins install neovim python package:&lt;/p&gt;
+sudo pip3 install neovim
+#sudo pip2 install neovim
+
+&lt;p&gt;Setup the NeoVim config files.&lt;/p&gt;
+mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
+mkdir $XDG_CONFIG_HOME/nvim # You can link .vim here, but I&#39;m starting from scratch.
+touch $XDG_CONFIG_HOME/nvim/init.vim
+
+&lt;p&gt;Now we install a plugin manager, &lt;a href=&#34;https://github.com/Shougo/dein.vim&#34;&gt;dein.vim&lt;/a&gt;:&lt;/p&gt;
+cd /tmp &amp;&amp; \
+curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh &gt; installer.sh &amp;&amp;\
+mkdir -p $HOME/.random &amp;&amp;\
+sh ./installer.sh $HOME/.random ||\
+echo &#34;Failed.&#34;
+
+&lt;p&gt;The installer will throw a wall of text and ask you to copy-pasta it in your &lt;code&gt;init.vim&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;p&gt;Now we need to let NeoVim know where our python binaries are located.&lt;/p&gt;
+let g:python_host_prog = &#39;/usr/bin/python&#39;
+let g:python3_host_prog = &#39;/usr/bin/python3&#39;
+
+&lt;p&gt;Uncomment the following lines in your &lt;code&gt;init.vim&lt;/code&gt; file, which installs plugins on startup:&lt;/p&gt;
+if dein#check_install()
+  call dein#install()
+endif
+
+&lt;p&gt;Now to install autocomplete for python. We will use &lt;code&gt;deoplete.nvim&lt;/code&gt; with &lt;code&gt;deoplete-jedi&lt;/code&gt; as source.&lt;/p&gt;
+# First install jedi
+sudo pip3 install jedi
+# Also install yapf for formatting
+sudo pip3 install yapf
+
+&lt;p&gt;Now add these lines to your &lt;code&gt;init.vim&lt;/code&gt;:&lt;/p&gt;
+call dein#add(&#39;Shougo/deoplete.nvim&#39;)
+call deoplete#enable()
+
+autocmd FileType python nnoremap &lt;leader&gt;y :0,$!yapf&lt;Cr&gt;
+autocmd CompleteDone * pclose &#34; To close preview window of deoplete automagically
+
+&lt;p&gt;Feel free to checkout my &lt;a href=&#34;https://github.com/MiteshNinja/dotfiles/tree/master/nvim&#34;&gt;NeoVim config&lt;/a&gt; on github.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

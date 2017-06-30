@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Django on Computable(verse)</title>
+    <link>http://computableverse.com/tags/django/index.xml</link>
+    <description>Recent content in Django on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://computableverse.com/tags/django/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Fix Django Invalid HTTP_HOST header emails</title>
+      <link>http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/</link>
+      <pubDate>Sun, 26 Feb 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful &lt;strong&gt;Error Reporting&lt;/strong&gt;
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.&lt;/p&gt;
+
+&lt;p&gt;But soon, I started getting a TON of &lt;code&gt;Invalid HTTP_HOST header&lt;/code&gt;. I tried to
+take a look into what exactly what happening.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://computableverse.com/assets/images/django-errors.png&#34; alt=&#34;tons of invalid host errors&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Firstly, I have a couple sites hosted on my server. Some of them are served via
+&lt;code&gt;https&lt;/code&gt; and some aren&amp;rsquo;t. When I took a closer look into the error reports, I
+could see that none of them had a &lt;em&gt;request url&lt;/em&gt; of earthlyhumans.com (my django
+app). They had the request of one of my other websites, but it somehow wasn&amp;rsquo;t
+being caught by their nginx configs.&lt;/p&gt;
+
+&lt;p&gt;So I took a look into how nginx choses a configuration for a particular
+request. First, it will check if a particular config has a valid &lt;code&gt;listen&lt;/code&gt;
+directive for the incoming request. If it does, then it moves onto checking the
+&lt;code&gt;server_name&lt;/code&gt; directive. If neither happens, it redirects to the &lt;code&gt;default&lt;/code&gt;
+block.&lt;/p&gt;
+
+&lt;p&gt;I already had a default block configured as follows..&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80;
+    return 444;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;..and yet urls were getting passed onto my Django application.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;/etc/nginx/sites-available$ tree
+.
+|-- default
+|-- earthlyhumans.com.conf
+|-- example.com.conf
+`-- example2.com.conf
+
+0 directories, 4 files
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is how my configuration looked. Now the problem was that why weren&amp;rsquo;t the
+requests getting redirected to one of my other applications.&lt;/p&gt;
+
+&lt;p&gt;Turns out, the &amp;ldquo;default&amp;rdquo; server in nginx is the first server block it reads i.e
+sorted alphabetically, unless you have the &lt;code&gt;default_server&lt;/code&gt; option listed in
+the &lt;code&gt;listen&lt;/code&gt; directive.&lt;/p&gt;
+
+&lt;p&gt;But wait a minute, &lt;code&gt;default&lt;/code&gt; block is still the first listed server block. But
+silly me, I hadn&amp;rsquo;t added a listen block for port 443. So it went ahead and
+found the first block with port 443 and matched it with my django server block.&lt;/p&gt;
+
+&lt;p&gt;So I simply changed my default config to&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;server {
+    listen 80 default_server;
+    return 444;
+}
+
+server {
+    listen 443 default_server;
+    server_name _; # This can be omitted.
+    return 444;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;special nginx’s non-standard code 444 is returned that closes the connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;That seemed to have fixed all my issues. You can also explicitly rename &lt;code&gt;default&lt;/code&gt;
+file to something like &lt;code&gt;0000-default&lt;/code&gt; which makes sure that it&amp;rsquo;s the first
+config to be loaded.&lt;/p&gt;
+
+&lt;p&gt;References:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://nginx.org/en/docs/http/request_processing.html&#34;&gt;nginx request processing&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://nginx.org/en/docs/beginners_guide.html&#34;&gt;nginx beginners guide&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- date: 2016-08-25 --&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

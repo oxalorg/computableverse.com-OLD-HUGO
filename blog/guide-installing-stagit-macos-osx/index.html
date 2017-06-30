@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guide to installing stagit on macOS / OSX</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='guide,git,stagit,macos' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Guide to installing stagit on macOS / OSX" />
+<meta property="og:description" content="Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&rsquo;s easy to use, looks decent, and best of all it&rsquo;s static. So here&rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/guide-installing-stagit-macos-osx/" />
+
+
+<meta property="og:updated_time" content="2016-10-01T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Guide to installing stagit on macOS / OSX">
+<meta itemprop="description" content="Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&rsquo;s easy to use, looks decent, and best of all it&rsquo;s static. So here&rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P
+
+">
+
+
+<meta itemprop="dateModified" content="2016-10-01T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="226">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Guide to installing stagit on macOS / OSX"/>
+<meta name="twitter:description" content="Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&rsquo;s easy to use, looks decent, and best of all it&rsquo;s static. So here&rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Guide to installing stagit on macOS / OSX</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2016-10-01T00:00:00Z">October 1, 2016</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/guide">guide</a>, <a href="http://computableverse.com/tags/git">git</a>, <a href="http://computableverse.com/tags/stagit">stagit</a>, <a href="http://computableverse.com/tags/macos">macos</a></span>
+    
+</small>
+ </p>
+
+<p>Stagit, a git web viewer, is relatively hard to find (at least it was for me), but I quickly fell in love with the simplicity. It&rsquo;s easy to use, looks decent, and best of all it&rsquo;s static. So here&rsquo;s a small guide to install it on macOS because, well, do people even remember how to build and install programs without a package manager? :P</p>
+
+<p></p>
+
+<ol>
+<li><p>First we need to install <code>libgit2</code> dependency of <code>stagit</code></p>
+
+<pre><code>brew install libgit2
+</code></pre>
+
+<p>This will install <code>libgit2</code> in the location: <code>/usr/local/Cellar/libgit2/0.24.1/</code> (the 0.24.1  version may vary, regardless home-brew will output the location where the library was installed, so take a note of it).</p></li>
+
+<li><p>Clone the stagit repository, since we will be building it on our own.</p>
+
+<pre><code>git clone git://git.2f30.org/stagit.git
+</code></pre>
+
+<p>Now before moving on, you can either choose to build from the latest master commit, or checkout a version before building. If you want to build a version, find all the versions using:</p>
+
+<pre><code>git tags -l
+</code></pre>
+
+<p>Then</p>
+
+<pre><code># git checkout tags/&lt;version&gt; 
+# e.g.:
+git checkout tags/0.4
+</code></pre></li>
+
+<li><p>Now edit the <code>config.mk</code> file in the directory as follows:</p>
+
+<pre><code># add /share/ after PREFIX
+MANPREFIX = ${PREFIX}/share/man
+
+...
+
+# set the library path as determined in step 1
+GITINC = /usr/local/Cellar/libgit2/0.24.1/include/
+GITLIB = /usr/local/Cellar/libgit2/0.24.1/lib/
+</code></pre></li>
+
+<li><p>Go back to command line and run:</p>
+
+<pre><code>make
+make install
+</code></pre></li>
+</ol>
+
+<p>If all went well, you can now <code>man stagit</code> and start using it.</p>
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/guide-installing-stagit-macos-osx\/';
+    var disqus_title = 'Guide to installing stagit on macOS \/ OSX';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/guide-installing-stagit-macos-osx\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>

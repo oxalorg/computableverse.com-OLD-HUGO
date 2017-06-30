@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pages on Computable(verse)</title>
+    <link>http://computableverse.com/page/index.xml</link>
+    <description>Recent content in Pages on Computable(verse)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 07 Jan 2017 15:58:12 +0530</lastBuildDate>
+    <atom:link href="http://computableverse.com/page/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>About computable verse</title>
+      <link>http://computableverse.com/about/</link>
+      <pubDate>Sat, 07 Jan 2017 15:58:12 +0530</pubDate>
+      
+      <guid>http://computableverse.com/about/</guid>
+      <description>
+
+&lt;p&gt;This blog will include posts mainly revolving around software
+and the computable multi-verse.&lt;/p&gt;
+
+&lt;p&gt;This is a place for me to share my love for computers and software.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Website: &lt;a href=&#34;http://miteshshah.com&#34;&gt;miteshshah.com&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Contact me at
+&lt;a href=&#34;mailto:mitesh@miteshshah.com&#34;&gt;mitesh@miteshshah.com&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Internet identity: &lt;code&gt;oxalorg&lt;/code&gt;: &lt;a href=&#34;https://oxal.org&#34;&gt;https://oxal.org&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;support-this-site&#34;&gt;Support this site&lt;/h2&gt;
+
+&lt;p&gt;If you&amp;rsquo;d like to support the creation of more content, please
+consider gifting me a book from my amazon
+&lt;a href=&#34;http://amzn.in/drlWdZy&#34;&gt;wishlist&lt;/a&gt; ^_^.&lt;/p&gt;
+
+&lt;h2 id=&#34;history&#34;&gt;History&lt;/h2&gt;
+
+&lt;p&gt;This blog was migrated to &lt;a href=&#34;https://gohugo.io&#34;&gt;Hugo&lt;/a&gt; on 07th
+January, before which it was generated using
+&lt;a href=&#34;https://jekyllrb.com/&#34;&gt;Jekyll&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;I also moved my hosting from GitHub pages to a personal digital
+ocean VPS when I switched to hugo.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

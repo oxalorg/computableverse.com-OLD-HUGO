@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fix Django Invalid HTTP_HOST header emails</title>
+    <meta name="description" content="A description that will appear as a default if front matter does not exist" />
+    <meta name="keywords" content='django,nginx,fix' />
+    
+    
+    <link href="" rel="alternate" type="application/rss+xml" title="Computable(verse)" />
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link rel="stylesheet" href="http://computableverse.com/css/normalize.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/sakura.css" />
+    <link rel="stylesheet" href="http://computableverse.com/css/custom.css" />
+    <meta property="og:title" content="Fix Django Invalid HTTP_HOST header emails" />
+<meta property="og:description" content="It&rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful Error Reporting
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.
+
+But soon, I started getting a TON of Invalid HTTP_HOST header. I tried to
+take a look into what exactly what happening.
+
+" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://computableverse.com/blog/2017-02-26-django-invalid-http-host-header/" />
+
+
+<meta property="og:updated_time" content="2017-02-26T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+<meta property="fb:admins" content="100000855963383" />
+    
+    
+<meta itemprop="name" content="Fix Django Invalid HTTP_HOST header emails">
+<meta itemprop="description" content="It&rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful Error Reporting
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.
+
+But soon, I started getting a TON of Invalid HTTP_HOST header. I tried to
+take a look into what exactly what happening.
+
+">
+
+
+<meta itemprop="dateModified" content="2017-02-26T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="417">
+
+
+
+<meta itemprop="keywords" content="ajax,atom,autocomplete,cors,django,dotfiles,fix,flask,git,guide,https,install,letsencrypt,linux,macos,markdown,neovim,nginx,pandoc,publishing,pypi,python,setup,ssl,stagit,static-site-generators,sysadmin,terminal,testing,text-editors,thoughts,til,ubuntu,vim,web,workflow,zsh," />
+
+    
+
+  <meta name="twitter:card" content="summary"/>
+
+
+
+<meta name="twitter:title" content="Fix Django Invalid HTTP_HOST header emails"/>
+<meta name="twitter:description" content="It&rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful Error Reporting
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.
+
+But soon, I started getting a TON of Invalid HTTP_HOST header. I tried to
+take a look into what exactly what happening.
+
+"/>
+<meta name="twitter:site" content="@oxalorg"/>
+<meta name="twitter:domain" content="computableverse.com"/>
+
+</head>
+<body>
+    <header class="site-header">
+        <h1 class="site-title"> <a href="/">computable<span class="meta">(</span><em>verse</em><span class="meta">)</span></a> {</h1>
+        <p class="meta">/* <a href="/about/">about</a> | <a href="/blog/">archive</a> */
+        </p>
+    </header>
+    <section class="site-main">
+        <section class="content">
+            
+<article class="post">
+<h1 class="post-title">Fix Django Invalid HTTP_HOST header emails</h1>
+<p class="meta"> 
+
+<small>
+    Posted on <time datetime="2017-02-26T00:00:00Z">February 26, 2017</time>
+    by <a href="http://miteshshah.com">Mitesh Shah</a>
+    
+        
+        in <span><a href="http://computableverse.com/tags/django">django</a>, <a href="http://computableverse.com/tags/nginx">nginx</a>, <a href="http://computableverse.com/tags/fix">fix</a></span>
+    
+</small>
+ </p>
+
+<p>It&rsquo;s been a long time since I deployed a django application on the internet. At
+first, I had no idea about the features of Django and was running it just like
+any other flask app. But soon, I came across the  wonderful <strong>Error Reporting</strong>
+module and I quickly realised how I had been missing something like this in my
+Flask deployments.</p>
+
+<p>But soon, I started getting a TON of <code>Invalid HTTP_HOST header</code>. I tried to
+take a look into what exactly what happening.</p>
+
+<p></p>
+
+<p><img src="/assets/images/django-errors.png" alt="tons of invalid host errors" /></p>
+
+<p>Firstly, I have a couple sites hosted on my server. Some of them are served via
+<code>https</code> and some aren&rsquo;t. When I took a closer look into the error reports, I
+could see that none of them had a <em>request url</em> of earthlyhumans.com (my django
+app). They had the request of one of my other websites, but it somehow wasn&rsquo;t
+being caught by their nginx configs.</p>
+
+<p>So I took a look into how nginx choses a configuration for a particular
+request. First, it will check if a particular config has a valid <code>listen</code>
+directive for the incoming request. If it does, then it moves onto checking the
+<code>server_name</code> directive. If neither happens, it redirects to the <code>default</code>
+block.</p>
+
+<p>I already had a default block configured as follows..</p>
+
+<pre><code>server {
+    listen 80;
+    return 444;
+}
+</code></pre>
+
+<p>..and yet urls were getting passed onto my Django application.</p>
+
+<pre><code>/etc/nginx/sites-available$ tree
+.
+|-- default
+|-- earthlyhumans.com.conf
+|-- example.com.conf
+`-- example2.com.conf
+
+0 directories, 4 files
+</code></pre>
+
+<p>This is how my configuration looked. Now the problem was that why weren&rsquo;t the
+requests getting redirected to one of my other applications.</p>
+
+<p>Turns out, the &ldquo;default&rdquo; server in nginx is the first server block it reads i.e
+sorted alphabetically, unless you have the <code>default_server</code> option listed in
+the <code>listen</code> directive.</p>
+
+<p>But wait a minute, <code>default</code> block is still the first listed server block. But
+silly me, I hadn&rsquo;t added a listen block for port 443. So it went ahead and
+found the first block with port 443 and matched it with my django server block.</p>
+
+<p>So I simply changed my default config to</p>
+
+<pre><code>server {
+    listen 80 default_server;
+    return 444;
+}
+
+server {
+    listen 443 default_server;
+    server_name _; # This can be omitted.
+    return 444;
+}
+</code></pre>
+
+<blockquote>
+<p>special nginx’s non-standard code 444 is returned that closes the connection.</p>
+</blockquote>
+
+<p>That seemed to have fixed all my issues. You can also explicitly rename <code>default</code>
+file to something like <code>0000-default</code> which makes sure that it&rsquo;s the first
+config to be loaded.</p>
+
+<p>References:</p>
+
+<ul>
+<li><a href="http://nginx.org/en/docs/http/request_processing.html">nginx request processing</a></li>
+<li><a href="http://nginx.org/en/docs/beginners_guide.html">nginx beginners guide</a></li>
+</ul>
+
+<!-- date: 2016-08-25 -->
+</article>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'computableverse';
+    var disqus_identifier = 'http:\/\/computableverse.com\/blog\/2017-02-26-django-invalid-http-host-header\/';
+    var disqus_title = 'Fix Django Invalid HTTP_HOST header emails';
+    var disqus_url = 'http:\/\/computableverse.com\/blog\/2017-02-26-django-invalid-http-host-header\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        </section>
+    </section>
+    <footer class="site-footer">
+        <h1>}</h1> 
+    </footer>
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-61533153-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+</body>
+</html>
